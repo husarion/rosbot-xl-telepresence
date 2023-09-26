@@ -55,19 +55,21 @@ and execute:
 ./flash_rosbot_firmware.sh
 ```
 
-## Step 4: Choosing the video compression
+## Step 4: Launching ROS 2 nodes
 
-Edit `.env` file and uncomment one of the available configs:
+We need to make sure `MULTICASTING` is enabled on `lo` interface:
 
 ```bash
-# using "compressed" codec from image_transport_plugins
-# CODEC=compressed
-
-# using "theora" codec from image_transport_plugins
-CODEC=theora
+$ ip link show lo
+1: lo: <LOOPBACK,MULTICAST,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
 ```
 
-## Step 5: Launching
+If not ...
+
+```bash
+sudo ip link set lo multicast on
+```
 
 ### PC
 
@@ -82,30 +84,42 @@ open a teleop interface - if you have ROS 2 installed on your laptop just run:
 ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 
-> **Don't have ROS 2?**
->
-> If you don't have ROS 2 natively installed, you can access the `interface` service from `compose.pc.yaml` that has the `teleop_twist_keyboard` package preeinstalled:
-> 
-> ```
-> docker compose -f compose.pc.yaml exec -it interface bash
-> ```
-> 
-> And inside the running container shell execute:
-> 
-> ```bash
-> ros2 run teleop_twist_keyboard teleop_twist_keyboard
-> ```
-
-To turn off run:
-
-```bash
-docker compose -f compose.pc.yaml down
-```
-
 ### ROSbot
 
 ```bash
 docker compose up
+```
+
+## Step 5: Launching DDS Router
+
+On both ROSbot XL and laptop execute:
+
+```
+docker run \
+--detach \
+--name ros2router \
+--network host \
+--restart unless-stopped \
+-e WHITELIST_INTERFACES="172.22.0.1 127.0.0.1" \
+-v $(pwd)/filter.yaml:/filter.yaml \
+husarnet/ros2router:1.0.0
+```
+
+Note that we have added two addresses to the `WHITELIST_INTERFACES` env:
+
+- `172.22.0.1` - is the network gateway address from the `172.22.0.0/24` internal network of the containers we launch from `compose.yaml` files
+- `127.0.0.1` - is a local loopback interface on the host
+
+You can stop the container with:
+
+```
+docker stop ros2router
+```
+
+And reenable it with:
+
+```
+docker start ros2router
 ```
 
 ## Troubleshooting
@@ -162,19 +176,3 @@ sudo sysctl -w net.ipv6.ip6frag_time=3 # 3s
 sudo sysctl -w net.ipv6.ip6frag_high_thresh=134217728 # (128 MB)
 ```
 
-**3. Using Logitech F710 gamepad**
-
-Rather than employing the `teleop_twist_keyboard` ROS 2 package, you have the option to use the Logitech F710 gamepad. To utilize it, plug it into your PC's USB port and remove the comment markers from these lines in `compose.pc.yaml`:
-
-```yaml
-  # joy2twist:
-  #   image: husarion/joy2twist:humble
-  #   network_mode: host
-  #   devices:
-  #     - /dev/input
-  #   volumes:
-  #     - ./params/joy2twist.yaml:/params.yaml
-  #   command: >
-  #     ros2 launch joy2twist gamepad_controller.launch.py
-  #       joy2twist_params_file:=/params.yaml
-```
