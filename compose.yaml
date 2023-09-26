@@ -1,0 +1,38 @@
+services:
+
+  rosbot:
+    image: husarion/rosbot-xl:humble-0.8.2-20230913
+    restart: always
+    command: ros2 launch rosbot_xl_bringup bringup.launch.py mecanum:=${MECANUM:-True}
+
+  microros:
+    image: husarion/micro-xrce-agent:v2.4.1
+    restart: always
+    ports:
+      - 8888:8888/udp
+    command: MicroXRCEAgent udp4 --port 8888
+
+  luxonis:
+    image: husarion/depthai:humble-2.8.1
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+      - ./params/oak-1.yaml:/ros2_ws/install/depthai_ros_driver/share/depthai_ros_driver/config/camera.yaml
+    device_cgroup_rules:
+      - 'c 189:* rmw'
+    command: ros2 launch depthai_ros_driver camera.launch.py parent_frame:=oak-1-base-frame
+           
+  ros2router:
+    image: husarnet/ros2router:1.0.0
+    restart: always
+    network_mode: host
+    volumes:
+      - ./filter.yaml:/filter.yaml
+    environment:
+      WHITELIST_INTERFACES: 172.22.0.1
+
+networks:
+  default:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.22.0.0/24
