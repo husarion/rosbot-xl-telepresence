@@ -132,7 +132,7 @@ The log from your computer where you launched `compose.pc.yaml` may contain the 
 [image_republisher]: [theora] Packet was not a Theora header
 ```
 
-Due to an issue in the theora codec, headers are probably sent only at the start. If you've initiated `compose.pc.yaml` following `compose.yaml`, it's essential to restart the `luxonis` service.
+Due to an issue in the theora codec, headers are sent only at the start. If you've initiated `compose.pc.yaml` following `compose.yaml`, it's essential to restart the `luxonis` service. This is old problem with a theora codec - see [GitHub Issue](https://github.com/ros-perception/image_transport_plugins/issues/4#issuecomment-15150432).
 
 To do so, execute in the ROSbot's terminal in the `/home/husarion/rosbot-telepresence` folder the following line:
 
