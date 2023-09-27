@@ -38,7 +38,7 @@ This repository contains the Docker Compose setup for both PC and ROSbot. You ca
 git clone https://github.com/husarion/rosbot-xl-telepresence
 cd rosbot-xl-telepresence 
 export ROSBOT_ADDR=rosbotxl # Replace with your own Husarnet hostname
-./sync_with_rosbot.sh ROSBOT_ADDR$
+./sync_with_rosbot.sh $ROSBOT_ADDR
 ```
 
 ## Step 3: Flashing the ROSbot Firmware
@@ -52,10 +52,13 @@ ssh husarion@$ROSBOT_ADDR
 and execute:
 
 ```bash
+cd rosbot-xl-telepresence
 ./flash_rosbot_firmware.sh
 ```
 
 ## Step 4: Launching ROS 2 nodes
+
+### On both PC and ROSbot
 
 We need to make sure `MULTICASTING` is enabled on `lo` interface:
 
