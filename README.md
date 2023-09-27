@@ -38,7 +38,7 @@ This repository contains the Docker Compose setup for both PC and ROSbot. You ca
 git clone https://github.com/husarion/rosbot-xl-telepresence
 cd rosbot-xl-telepresence 
 export ROSBOT_ADDR=rosbotxl # Replace with your own Husarnet hostname
-./sync_with_rosbot.sh ROSBOT_ADDR$
+./sync_with_rosbot.sh $ROSBOT_ADDR
 ```
 
 ## Step 3: Flashing the ROSbot Firmware
@@ -84,7 +84,7 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard
 
 > **Don't have ROS 2?**
 >
-> If you don't have ROS 2 natively installed, you can access the `interface` service from `compose.pc.yaml` that has the `teleop_twist_keyboard` package preeinstalled:
+> If you don't have ROS 2 natively installed, you can access the `interface` service from `compose.pc.yaml` that has the `teleop_twist_keyboard` package preinstalled:
 > 
 > ```
 > docker compose -f compose.pc.yaml exec -it interface bash
