@@ -1,19 +1,42 @@
+x-common-config:
+  &common-config
+  network_mode: host
+  ipc: host
+  restart: unless-stopped
+
+x-ros-envs:
+  &ros-envs
+  environment:
+    - FASTRTPS_DEFAULT_PROFILES_FILE=/shm-only.xml
+    # - ROBOT_NAMESPACE=${ROBOT_NAMESPACE:-robot}
+    - USER
+
 services:
 
   rosbot:
-    image: husarion/rosbot-xl:humble-0.8.2-20230913
-    restart: always
+    image: husarion/rosbot-xl:humble-0.8.12-20240115
+    <<: 
+      - *common-config
+      - *ros-envs
+    healthcheck:
+      disable: true
+    volumes:
+      - ./ros_entrypoint.sh:/ros_entrypoint.sh
     command: ros2 launch rosbot_xl_bringup bringup.launch.py mecanum:=${MECANUM:-True}
+    # command: tail -f /dev/null
 
   microros:
-    image: husarion/micro-xrce-agent:v2.4.1
-    restart: always
-    ports:
-      - 8888:8888/udp
-    command: MicroXRCEAgent udp4 --port 8888
+    image: husarion/micro-ros-agent:humble-entrypoint #humble-3.1.3-20240104
+    <<: 
+      - *common-config
+      - *ros-envs
+    command: ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
 
   luxonis:
-    image: husarion/depthai:humble-2.8.1
+    image: husarion/depthai:humble-2.8.1-20240126
+    <<: 
+      - *common-config
+      - *ros-envs
     volumes:
       - /dev/bus/usb:/dev/bus/usb
       - ./params/oak-1.yaml:/ros2_ws/install/depthai_ros_driver/share/depthai_ros_driver/config/camera.yaml
@@ -22,17 +45,22 @@ services:
     command: ros2 launch depthai_ros_driver camera.launch.py parent_frame:=oak-1-base-frame
            
   ros2router:
-    image: husarnet/ros2router:1.0.0
-    restart: always
-    network_mode: host
+    image: husarnet/ros2router:1.6.3
+    <<: *common-config
     volumes:
       - ./filter.yaml:/filter.yaml
     environment:
-      WHITELIST_INTERFACES: 172.22.0.1
+      - VIDEO_CODEC=ffmpeg # can be `ffmpeg`, `theora` or `compressed`
+      # - ROBOT_NAMESPACE=${ROBOT_NAMESPACE:-robot}
+      - USER
+      # ==========================
+      # envs for Husarnet setup
+      # ==========================
+      - DISCOVERY_SERVER_LISTENING_PORT=11811
+      - DISCOVERY_SERVER_ID=0
+      # ==========================
+      # envs for LAN setup
+      # ==========================
+      # - ROS_LOCALHOST_ONLY=0
+      # - HUSARNET_PARTICIPANT_ENABLED=false
 
-networks:
-  default:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.22.0.0/24

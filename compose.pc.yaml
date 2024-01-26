@@ -1,61 +1,65 @@
-x-gpu-config:
-  &gpu-config
-  runtime: nvidia
-  environment:
-    - DISPLAY=${DISPLAY:?err}
-    - NVIDIA_VISIBLE_DEVICES=all
-    - NVIDIA_DRIVER_CAPABILITIES=all
+x-common-config:
+  &common-config
+  network_mode: host
+  ipc: host
+  restart: unless-stopped
 
 x-cpu-config:
   &cpu-config
+  env_file: .env.cpu
+
+x-gpu-config:
+  &gpu-config
+  runtime: nvidia
+  env_file: .env.gpu
+
+x-ros-envs:
+  &ros-envs
   environment:
-    - DISPLAY=${DISPLAY:?err}
-    - LIBGL_ALWAYS_SOFTWARE=1
+    - FASTRTPS_DEFAULT_PROFILES_FILE=/shm-only.xml
+    - ROBOT_NAMESPACE=${ROBOT_NAMESPACE:-robot}
+    - USER
 
 services:
 
-  image_decompressor:
-    image: husarion/image-transport:humble
-    restart: always
-    command: >
-      ros2 run image_transport republish ${CODEC:-theora} raw
-      --ros-args
-      --remap in/${CODEC:-theora}:=/oak/rgb/image_raw/${CODEC:-theora}
-      --remap out:=/camera/my_image_raw
+  ros2router:
+    image: husarnet/ros2router:1.6.3
+    <<: *common-config
+    environment:
+      - USER
+      # ==========================
+      # envs for Husarnet setup
+      # ==========================
+      - ROS_DISCOVERY_SERVER=${ROBOT_NAMESPACE}:11811
+      - DISCOVERY_SERVER_ID=10 # need to be different as ros2router on ROSbot
+      # ==========================
+      # envs for LAN setup
+      # ==========================
+      # - ROS_LOCALHOST_ONLY=0
+      # - HUSARNET_PARTICIPANT_ENABLED=false
 
-  # if you have NVDIA GPU and NVIDIA Container Toolkit, you can replace
-  # "cpu-config" with "gpu-config"
-  interface:
-    image: husarion/image-tools:humble
-    restart: always
-    <<: *cpu-config
+  rviz:
+    image: husarion/rviz2:humble-11.2.9-20240111
+    <<: 
+      - *common-config
+      - *ros-envs
+      - *cpu-config
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-    command: ros2 run image_tools showimage --ros-args -p reliability:=best_effort --remap image:=/camera/my_image_raw
+      - ./params/default.rviz:/default.rviz
+      - ./rviz.launch.py:/rviz.launch.py
+    command: ros2 launch /rviz.launch.py
 
-  ros2router:
-    image: husarnet/ros2router:1.0.0
-    restart: always
-    network_mode: host
+  joy2twist:
+    image: husarion/joy2twist:humble-1.0.0-20240105
+    <<: 
+      - *common-config
+      - *ros-envs
+    devices:
+      - /dev/input
     volumes:
-      - ./filter.yaml:/filter.yaml
-    environment:
-      WHITELIST_INTERFACES: 172.22.0.1 127.0.0.1
-
-  # joy2twist:
-  #   image: husarion/joy2twist:humble
-  #   devices:
-  #     - /dev/input
-  #   volumes:
-  #     - ./params/joy2twist.yaml:/params.yaml
-  #   command: >
-  #     ros2 launch joy2twist gamepad_controller.launch.py
-  #       joy2twist_params_file:=/params.yaml
-
-networks:
-  default:
-    ipam:
-      driver: default
-      config:
-        - subnet: 172.22.0.0/24
-
+      - ./params/joy2twist.yaml:/params.yaml
+    command: >
+      ros2 launch joy2twist gamepad_controller.launch.py
+        joy2twist_params_file:=/params.yaml
+        namespace:=${ROBOT_NAMESPACE}
