@@ -1,0 +1,30 @@
+version: v3.0
+participants:
+  - name: LocalUdpParticipant
+    kind: local
+    domain: 0
+    transport: udp
+    ignore-participant-flags: no_filter
+    whitelist-interfaces:
+      - 127.0.0.1
+  - name: LocalShmParticipant
+    kind: local
+    domain: 0
+    transport: shm
+  - name: HusarnetParticipant
+    kind: local-discovery-server
+    discovery-server-guid:
+      ros-discovery-server: true
+      id: 10
+    connection-addresses:
+      - discovery-server-guid:
+          ros-discovery-server: true
+          id: 0
+        addresses:
+          - ip: fc94:8818:ee0c:0dbb:ea6d:50b0:e924:492f
+            port: 11811
+            transport: udp
+allowlist:
+  - name: "rt/*"
+blocklist: []
+builtin-topics: []

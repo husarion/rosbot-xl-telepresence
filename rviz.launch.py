@@ -16,7 +16,7 @@ def generate_launch_description():
             package='image_transport',
             executable='republish',
             name='republish',
-            arguments=['ffmpeg', 'in/ffmpeg:=/rosbotxl/camera/color/image_raw/ffmpeg', 'raw', 'out:=/image_raw/uncompressed'],
+            arguments=['ffmpeg', 'in/ffmpeg:=/oak/rgb/image_raw/ffmpeg', 'raw', 'out:=/image_raw/uncompressed'],
             output='screen'
         ),
     ])

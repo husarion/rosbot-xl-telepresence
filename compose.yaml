@@ -33,16 +33,19 @@ services:
     command: ros2 run micro_ros_agent micro_ros_agent udp4 --port 8888
 
   luxonis:
-    image: husarion/depthai:humble-2.8.1-20240126
+    image: husarion/depthai:humble-2.8.1-20240127
     <<: 
       - *common-config
       - *ros-envs
     volumes:
       - /dev/bus/usb:/dev/bus/usb
-      - ./params/oak-1.yaml:/ros2_ws/install/depthai_ros_driver/share/depthai_ros_driver/config/camera.yaml
+      - ./params/oak-1.yaml:/camera.params.yaml
     device_cgroup_rules:
       - 'c 189:* rmw'
-    command: ros2 launch depthai_ros_driver camera.launch.py parent_frame:=oak-1-base-frame
+    command: >
+      ros2 launch depthai_ros_driver camera.launch.py 
+        parent_frame:=oak-1-base-frame
+        params_file:=/camera.params.yaml
            
   ros2router:
     image: husarnet/ros2router:1.6.3
