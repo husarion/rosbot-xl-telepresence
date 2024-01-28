@@ -23,13 +23,20 @@ x-ros-envs:
 services:
 
   ros2router:
-    image: husarnet/ros2router:1.6.3
+    image: husarnet/ros2router:ddsrouter-2.1.0
     <<: *common-config
     # volumes:
     #   - ./config.yaml:/config.yaml
+    volumes:
+      - ./local-participants.yaml:/local-participants.yaml
     environment:
       # - AUTO_CONFIG=FALSE
       - USER
+      - |
+        FILTER=
+          blocklist:
+          - name: "rt/*"
+            type: sensor_msgs::msg::dds_::Image_
       # ==========================
       # envs for Husarnet setup
       # ==========================

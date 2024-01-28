@@ -48,10 +48,11 @@ services:
         params_file:=/camera.params.yaml
            
   ros2router:
-    image: husarnet/ros2router:1.6.3
+    image: husarnet/ros2router:ddsrouter-2.1.0
     <<: *common-config
     volumes:
       - ./filter.yaml:/filter.yaml
+      - ./local-participants.yaml:/local-participants.yaml
     environment:
       - VIDEO_CODEC=ffmpeg # can be `ffmpeg`, `theora` or `compressed`
       # - ROBOT_NAMESPACE=${ROBOT_NAMESPACE:-robot}
