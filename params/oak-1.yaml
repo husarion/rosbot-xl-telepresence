@@ -32,16 +32,18 @@
       i_fsync_continuous: false
       i_fsync_trigger: false
       i_get_base_device_timestamp: false
-      i_width: 640
-      i_height: 360
-      i_interleaved: false
-      i_isp_den: 3 
-      i_isp_num: 2
-      i_keep_preview_aspect_ratio: true
-      i_low_bandwidth: false
-      i_low_bandwidth_quality: 50
-      i_max_q_size: 30
+      # i_width: 1280 #valid if i_output_isp: false
+      # i_height: 720 #valid if i_output_isp: false
+      # i_interleaved: false
+      # scaling 1920x1080 1:3 to 640x360
+      # https://docs-beta.luxonis.com/develop/ros/depthai-ros-driver#Available%20sensors%20and%20their%20resolutions%3A
       i_output_isp: true
+      i_isp_den: 3 #3 valid if i_output_isp: true
+      i_isp_num: 2 #2 valid if i_output_isp: true
+      i_keep_preview_aspect_ratio: true
+      i_low_bandwidth: false # false
+      i_low_bandwidth_quality: 50 # 50
+      i_max_q_size: 30
       i_preview_height: 300
       i_preview_size: 300
       i_preview_width: 300
