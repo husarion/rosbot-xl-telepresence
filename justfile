@@ -1,6 +1,10 @@
 set dotenv-load
 
 [private]
+default:
+    @just --list --unsorted
+
+[private]
 alias husarnet := connect-husarnet
 [private]
 alias flash := flash-firmware
@@ -12,41 +16,147 @@ alias pc := start-pc
 alias teleop := run-teleop
 [private]
 alias teleop-docker := run-teleop-docker
-[private]
-alias joy := run-joy
 
 [private]
-default:
-  @just --list --unsorted
+gazebo: (start-simulation "gazebo")
+
+[private]
+webots: (start-simulation "webots")
+
+[private]
+pre-commit:
+    #!/bin/bash
+    if ! command -v pre-commit &> /dev/null; then
+        pip install pre-commit
+        pre-commit install
+    fi
+    pre-commit run -a
+
+# connect to Husarnet VPN network
+connect-husarnet joincode hostname: _run-as-root
+    #!/bin/bash
+    if ! command -v husarnet > /dev/null; then
+        echo "Husarnet is not installed. Installing now..."
+        curl https://install.husarnet.com/install.sh | bash
+    fi
+    husarnet join {{joincode}} {{hostname}}
+
+# Copy repo content to remote host with 'rsync' and watch for changes
+sync hostname="${ROBOT_NAMESPACE}" password="husarion": _install-rsync _run-as-user
+    #!/bin/bash
+    mkdir -m 775 -p maps
+    sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --exclude='maps/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
+    while inotifywait -r -e modify,create,delete,move ./ --exclude='.git/' --exclude='maps/' ; do
+        sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --exclude='maps/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
+    done
+
+# flash the proper firmware for STM32 microcontroller in ROSbot XL
+flash-firmware: _install-yq _run-as-user
+    #!/bin/bash
+    echo "Stopping all running containers"
+    docker ps -q | xargs -r docker stop
+
+    echo "Flashing the firmware for STM32 microcontroller in ROSbot"
+    docker run \
+        --rm -it \
+        --device /dev/ttyUSBDB \
+        --device /dev/bus/usb/ \
+        $(yq .services.rosbot.image compose.yaml) \
+        ros2 run rosbot_xl_utils flash_firmware --port /dev/ttyUSBDB
+        # flash-firmware.py -p /dev/ttyUSBDB # todo
+
+# start containers on a physical ROSbot XL
+start-rosbot: _run-as-user
+    #!/bin/bash
+    mkdir -m 775 -p maps
+    docker compose down
+    docker compose pull
+    docker compose up
+
+# start containers on PC
+start-pc: _run-as-user
+    #!/bin/bash
+    xhost +local:docker
+    docker compose -f compose.pc.yaml up
+
+# start the simulation (available options: gazebo, webots)
+start-simulation engine="gazebo": _run-as-user
+    #!/bin/bash
+    xhost +local:docker
+
+    if [[ "{{engine}}" == "gazebo" ]]; then
+        export SIM_ENGINE_COMPOSE="compose.sim.gazebo.yaml"
+    elif [[ "{{engine}}" == "webots" ]]; then
+        export SIM_ENGINE_COMPOSE="compose.sim.webots.yaml"
+    else
+        echo -e "\e[1;33mUnknown ROS 2 simulation engine: {{engine}}\e[0m"
+        exit 1
+    fi
+
+    trap "docker compose -f $SIM_ENGINE_COMPOSE down" SIGINT # Remove containers after CTRL+C
+
+    docker compose -f $SIM_ENGINE_COMPOSE down
+    docker compose -f $SIM_ENGINE_COMPOSE pull
+    docker compose -f $SIM_ENGINE_COMPOSE up
+
+# run teleop_twist_keybaord (host)
+run-teleop:
+    #!/bin/bash
+    . .env.local
+    ros2 run teleop_twist_keyboard teleop_twist_keyboard # --ros-args -r __ns:=/${ROBOT_NAMESPACE}
+
+# run teleop_twist_keybaord (inside rviz2 container)
+run-teleop-docker:
+    #!/bin/bash
+    docker compose -f compose.pc.yaml exec rviz /bin/bash -c "/ros_entrypoint.sh ros2 run teleop_twist_keyboard teleop_twist_keyboard"
+
+# Restart the Nav2 container
+restart-navigation: _run-as-user
+    #!/bin/bash
+    docker compose down navigation
+    docker compose up -d navigation
+
+_run-as-root:
+    #!/bin/bash
+    if [ "$EUID" -ne 0 ]; then
+        echo -e "\e[1;33mPlease re-run as root user to install dependencies\e[0m"
+        exit 1
+    fi
+
+_run-as-user:
+    #!/bin/bash
+    if [ "$EUID" -eq 0 ]; then
+        echo -e "\e[1;33mPlease re-run as non-root user\e[0m"
+        exit 1
+    fi
 
 _install-rsync:
     #!/bin/bash
-    if ! command -v rsync &> /dev/null; then \
-        if [ "$EUID" -ne 0 ]; then \
-            echo "Please run as root to install dependencies"; \
-            exit 1; \
+    if ! command -v rsync &> /dev/null || ! command -v sshpass &> /dev/null || ! command -v inotifywait &> /dev/null; then
+        if [ "$EUID" -ne 0 ]; then
+            echo -e "\e[1;33mPlease run as root to install dependencies\e[0m"
+            exit 1
         fi
-
-        sudo apt update && sudo apt install -y rsync
+        apt install -y rsync sshpass inotify-tools
     fi
 
 _install-yq:
     #!/bin/bash
-    if ! command -v /usr/bin/yq &> /dev/null; then \
-        if [ "$EUID" -ne 0 ]; then \
-            echo "Please run as root to install dependencies"; \
-            exit 1; \
+    if ! command -v /usr/bin/yq &> /dev/null; then
+        if [ "$EUID" -ne 0 ]; then
+            echo -e "\e[1;33mPlease run as root to install dependencies\e[0m"
+            exit 1
         fi
 
         YQ_VERSION=v4.35.1
         ARCH=$(arch)
 
-        if [ "$ARCH" = "x86_64" ]; then \
-            YQ_ARCH="amd64"; \
-        elif [ "$ARCH" = "aarch64" ]; then \
-            YQ_ARCH="arm64"; \
-        else \
-            YQ_ARCH="$ARCH"; \
+        if [ "$ARCH" = "x86_64" ]; then
+            YQ_ARCH="amd64"
+        elif [ "$ARCH" = "aarch64" ]; then
+            YQ_ARCH="arm64"
+        else
+            YQ_ARCH="$ARCH"
         fi
 
         curl -L https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${YQ_ARCH} -o /usr/bin/yq
@@ -54,75 +164,26 @@ _install-yq:
         echo "yq installed successfully!"
     fi
 
-# connect to Husarnet VPN network
-connect-husarnet joincode hostname:
-    #!/bin/bash
-    if [ "$EUID" -ne 0 ]; then \
-        echo "Please run as root"; \
-        exit; \
-    fi
-    if ! command -v husarnet > /dev/null; then \
-        echo "Husarnet is not installed. Installing now..."; \
-        curl https://install.husarnet.com/install.sh | sudo bash; \
-    fi
-    husarnet join {{joincode}} {{hostname}}
-
-# flash the proper firmware for STM32 microcontroller in ROSbot 2R / 2 PRO
-flash-firmware: _install-yq
-    #!/bin/bash
-    if [ "$EUID" -ne 0 ]; then
-        echo "Stopping all running containers"
-        docker ps -q | xargs -r docker stop
-
-        echo "Flashing the firmware for STM32 microcontroller in ROSbot"
-        docker run \
-            --rm -it --privileged \
-            --mount type=bind,source=/dev/ttyUSBDB,target=/dev/ttyUSBDB \
-            $(yq .services.rosbot.image compose.yaml) \
-            flash-firmware.py -p /dev/ttyUSBDB # todo
-            # ros2 run rosbot_utils flash_firmware
-    else
-        echo "Please run \"just flash-firmware\" as non-root user"
-    fi
-
-# start containers on ROSbot 2R / 2 PRO
-start-rosbot:
-    #!/bin/bash
-    docker compose up
-
-# start containers on PC
-start-pc:
-    xhost +local:docker
-    docker compose -f compose.pc.yaml up rviz ros2router
-
-# run teleop_twist_keybaord (host)
-run-teleop:
-    #!/bin/bash
-    export FASTRTPS_DEFAULT_PROFILES_FILE=$(pwd)/shm-only.xml
-    ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r __ns:=/${ROBOT_NAMESPACE}
-
-# run teleop_twist_keybaord (inside rviz2 container)
-run-teleop-docker:
-    docker compose -f compose.pc.yaml exec rviz /bin/bash -c "/ros_entrypoint.sh ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -r __ns:=/${ROBOT_NAMESPACE}"
-
-# enable the F710 gemapad (connected to your PC) to control ROSbot
-run-joy:
-    docker compose -f compose.pc.yaml up joy2twist
-
-# copy repo content to remote host with 'rsync' and watch for changes
-sync hostname="${ROBOT_NAMESPACE}" password="husarion": _install-rsync
-    #!/bin/bash
-    if [ "$EUID" -ne 0 ]; then
-        sshpass -p "husarion" rsync -vRr --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
-        while inotifywait -r -e modify,create,delete,move ./ ; do
-            sshpass -p "{{password}}" rsync -vRr --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
-        done
-    else
-        echo "Please run \"just sync\" as non-root user"
-    fi
 
 # source ROS 2 workspace
 config:
     #!/bin/bash
     echo 'SUBSYSTEM=="usb", ATTRS{idVendor}=="03e7", MODE="0666"' | sudo tee /etc/udev/rules.d/80-movidius.rules
     sudo udevadm control --reload-rules && sudo udevadm trigger
+
+dds-tunning:
+    #!/bin/bash
+
+    # https://fast-dds.docs.eprosima.com/en/latest/fastdds/use_cases/large_data/large_data.html#
+
+    sudo sysctl -w net.core.wmem_max=12582912
+    sudo sysctl -w net.core.rmem_max=12582912
+    sudo sysctl -w net.core.wmem_default=16384000
+    sudo sysctl -w net.core.rmem_default=16384000
+    sudo sysctl -w net.ipv4.ipfrag_high_thresh=134217728     # (128 MB)
+    sudo sysctl -w net.ipv4.ipfrag_time=3
+    sudo sysctl -w net.ipv6.ip6frag_time=3 # 3s
+    sudo sysctl -w net.ipv6.ip6frag_high_thresh=134217728 # (128 MB)
+    sudo ip link set txqueuelen 500 dev hnet0
+    sudo ip link set dev hnet0 mtu 1350
+    # sudo ip link set dev hnet0 mtu 9000

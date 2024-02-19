@@ -1,57 +1,30 @@
 /oak:
   ros__parameters:
+    # qos_overrides:  # group for all the qos settings
+    #   '/oak/rgb/image_raw':
+    #     publisher:
+    #       reliability: best_effort
     camera:
-      i_calibration_dump: false
       i_enable_imu: false
       i_enable_ir: false
-      i_external_calibration_path: ''
       i_floodlight_brightness: 0
       i_ip: ''
       i_laser_dot_brightness: 800
       i_mx_id: ''
       i_nn_type: none
-      i_pipeline_dump: false
-      i_pipeline_type: RGB
-      i_publish_tf_from_calibration: false
-      i_restart_on_diagnostics_error: false
-      i_tf_base_frame: oak
-      i_tf_cam_pitch: '0.0'
-      i_tf_cam_pos_x: '0.0'
-      i_tf_cam_pos_y: '0.0'
-      i_tf_cam_pos_z: '0.0'
-      i_tf_cam_roll: '0.0'
-      i_tf_cam_yaw: '0.0'
-      i_tf_camera_model: ''
-      i_tf_camera_name: oak
-      i_tf_custom_urdf_location: ''
-      i_tf_custom_xacro_args: ''
-      i_tf_imu_from_descr: 'false'
-      i_tf_parent_frame: oak-1-base-frame
+      i_pipeline_type: RGB # https://docs-beta.luxonis.com/develop/ros/depthai-ros-driver#Depthai%20ROS%20Driver-Available%20sensors%20and%20their%20resolutions%3A
       i_usb_port_id: ''
       i_usb_speed: SUPER_PLUS
-    diagnostic_updater:
-      period: 1.0
-    imu:
-      i_acc_cov: 0.0
-      i_acc_freq: 400
-      i_batch_report_threshold: 5
-      i_enable_rotation: false
-      i_get_base_device_timestamp: false
-      i_gyro_cov: 0.0
-      i_gyro_freq: 400
-      i_mag_cov: 0.0
-      i_max_batch_reports: 10
-      i_message_type: IMU
-      i_rot_cov: -1.0
-      i_sync_method: LINEAR_INTERPOLATE_ACCEL
-      i_update_ros_base_time_on_ros_msg: false
+      i_pipeline_dump: false
+      i_calibration_dump: false
+      i_external_calibration_path: ''
     rgb:
       i_add_exposure_offset: false
       i_board_socket_id: 0
       i_calibration_file: ''
       i_disable_node: false
       i_enable_feature_tracker: false
-      i_enable_lazy_publisher: false #true
+      i_enable_lazy_publisher: true
       i_enable_nn: false
       i_enable_preview: false
       i_exposure_offset: 0
@@ -59,14 +32,6 @@
       i_fsync_continuous: false
       i_fsync_trigger: false
       i_get_base_device_timestamp: false
-      i_height: 432 #720
-      i_interleaved: false
-      i_isp_den: 5 #3 #3 valid if i_output_isp: true
-      i_isp_num: 2 #2 valid if i_output_isp: true
-      i_keep_preview_aspect_ratio: true
-      i_low_bandwidth: true #false
-      i_low_bandwidth_quality: 20
-      i_max_q_size: 30
       # i_width: 1280 #valid if i_output_isp: false
       # i_height: 720 #valid if i_output_isp: false
       # i_interleaved: false
@@ -74,11 +39,17 @@
       # https://docs-beta.luxonis.com/develop/ros/depthai-ros-driver#Available%20sensors%20and%20their%20resolutions%3A
       # IMX378, 1080P is 1920x1080, i_isp_den=3 and i_isp_num=2 will give 1280x720 (/16=)
       i_output_isp: true
+      i_isp_den: 5 #3 #3 valid if i_output_isp: true
+      i_isp_num: 2 #2 valid if i_output_isp: true
+      i_keep_preview_aspect_ratio: true
+      i_low_bandwidth: false # false
+      i_low_bandwidth_quality: 50 # 50
+      i_max_q_size: 60 #30
       i_preview_height: 300
       i_preview_size: 300
       i_preview_width: 300
       i_publish_topic: true
-      i_resolution: 1080P
+      i_resolution: 1080P # available resolutions: https://docs-beta.luxonis.com/develop/ros/depthai-ros-driver#Available%20sensors%20and%20their%20resolutions%3A
       i_reverse_stereo_socket_order: false
       i_sensor_img_orientation: AUTO
       i_set_isp3a_fps: false
@@ -86,7 +57,6 @@
       i_simulate_from_topic: false
       i_simulated_topic_name: ''
       i_update_ros_base_time_on_ros_msg: false
-      i_width: 768 #1280
       r_exposure: 20000
       r_focus: 1
       r_iso: 800
