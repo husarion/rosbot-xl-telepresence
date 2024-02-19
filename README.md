@@ -62,11 +62,11 @@ Ensure that both ROSbot XL and your laptop are linked to the same Husarnet VPN n
    export JOINCODE=<PASTE_YOUR_JOIN_CODE_HERE>
    sudo husarnet join $JOINCODE rosbotxl
    ```
-   > [!IMPORTANT]
-   > note that `rosbotxl` is a default ROSbot hostname used in this project. If you want to change it, edit the `.env` file and change the line:
-   > ```bash
-   > ROBOT_NAMESPACE=rosbotxl
-   > ```
+> [!IMPORTANT]
+> note that `rosbotxl` is a default ROSbot hostname used in this project. If you want to change it, edit the `.env` file and change the line:
+> ```bash
+> ROBOT_NAMESPACE=rosbotxl
+> ```
 
 ### 📡 Step 2: Sync
 
