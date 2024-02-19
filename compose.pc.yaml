@@ -34,16 +34,15 @@ services:
       - NVIDIA_DRIVER_CAPABILITIES=all # if LIBGL_ALWAYS_SOFTWARE=1 this env var is ignored
     command: ros2 launch /rviz.launch.py
 
-  # joy2twist:
-  #   image: husarion/joy2twist:humble-1.0.0-20240105
-  #   <<:
-  #     - *common-config
-  #     - *dds-envs
-  #   devices:
-  #     - /dev/input
-  #   volumes:
-  #     - ./params/joy2twist.yaml:/params.yaml
-  #   command: >
-  #     ros2 launch joy2twist gamepad_controller.launch.py
-  #       joy2twist_params_file:=/params.yaml
-  #       namespace:=${ROBOT_NAMESPACE}
+  joy2twist:
+    image: husarion/joy2twist:humble-1.0.0-20240105
+    <<:
+      - *common-config
+      - *dds-envs
+    devices:
+      - /dev/input
+    volumes:
+      - ./params/joy2twist.yaml:/params.yaml
+    command: >
+      ros2 launch joy2twist gamepad_controller.launch.py
+        joy2twist_params_file:=/params.yaml

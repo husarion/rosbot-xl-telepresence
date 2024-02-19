@@ -13,15 +13,11 @@ alias rosbot := start-rosbot
 [private]
 alias pc := start-pc
 [private]
+alias joy := run-joy
+[private]
 alias teleop := run-teleop
 [private]
 alias teleop-docker := run-teleop-docker
-
-[private]
-gazebo: (start-simulation "gazebo")
-
-[private]
-webots: (start-simulation "webots")
 
 [private]
 pre-commit:
@@ -77,27 +73,13 @@ start-rosbot: _run-as-user
 start-pc: _run-as-user
     #!/bin/bash
     xhost +local:docker
-    docker compose -f compose.pc.yaml up
+    docker compose -f compose.pc.yaml up ros2router rviz
 
-# start the simulation (available options: gazebo, webots)
-start-simulation engine="gazebo": _run-as-user
+# start containers on PC
+run-joy: _run-as-user
     #!/bin/bash
     xhost +local:docker
-
-    if [[ "{{engine}}" == "gazebo" ]]; then
-        export SIM_ENGINE_COMPOSE="compose.sim.gazebo.yaml"
-    elif [[ "{{engine}}" == "webots" ]]; then
-        export SIM_ENGINE_COMPOSE="compose.sim.webots.yaml"
-    else
-        echo -e "\e[1;33mUnknown ROS 2 simulation engine: {{engine}}\e[0m"
-        exit 1
-    fi
-
-    trap "docker compose -f $SIM_ENGINE_COMPOSE down" SIGINT # Remove containers after CTRL+C
-
-    docker compose -f $SIM_ENGINE_COMPOSE down
-    docker compose -f $SIM_ENGINE_COMPOSE pull
-    docker compose -f $SIM_ENGINE_COMPOSE up
+    docker compose -f compose.pc.yaml up joy2twist
 
 # run teleop_twist_keybaord (host)
 run-teleop:
@@ -109,12 +91,6 @@ run-teleop:
 run-teleop-docker:
     #!/bin/bash
     docker compose -f compose.pc.yaml exec rviz /bin/bash -c "/ros_entrypoint.sh ros2 run teleop_twist_keyboard teleop_twist_keyboard"
-
-# Restart the Nav2 container
-restart-navigation: _run-as-user
-    #!/bin/bash
-    docker compose down navigation
-    docker compose up -d navigation
 
 _run-as-root:
     #!/bin/bash
@@ -175,7 +151,7 @@ dds-tunning:
     #!/bin/bash
 
     # https://fast-dds.docs.eprosima.com/en/latest/fastdds/use_cases/large_data/large_data.html#
-
+    # https://docs.ros.org/en/humble/How-To-Guides/DDS-tuning.html
     sudo sysctl -w net.core.wmem_max=12582912
     sudo sysctl -w net.core.rmem_max=12582912
     sudo sysctl -w net.core.wmem_default=16384000

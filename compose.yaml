@@ -18,7 +18,6 @@ services:
     environment:
       - USER
       - PARTICIPANTS=husarnet,shm
-      - VIDEO_CODEC
 
   rosbot:
     image: husarion/rosbot-xl:humble-0.10.0-20240216
@@ -39,15 +38,9 @@ services:
       - *dds-envs
     volumes:
       - /dev/bus/usb:/dev/bus/usb
-      - ./params/oak-1.yaml:/camera.params.yaml
+      - ./params/oak-1.yaml:/params.yaml
     device_cgroup_rules:
       - 'c 189:* rmw'
-    # command: tail -f /dev/null
     command: >
-      ros2 launch depthai_ros_driver camera.launch.py 
-        params_file:=/camera.params.yaml
-    # command: >
-    #   ros2 launch depthai_ros_driver camera.launch.py 
-    #     parent_frame:=oak-1-base-frame
-    #     params_file:=/camera.params.yaml
-           
+      ros2 launch depthai_ros_driver camera.launch.py
+        params_file:=/params.yaml

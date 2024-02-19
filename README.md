@@ -1,13 +1,24 @@
 # rosbot-xl-telepresence
 
-Manual ROSbot XL Driving over the Internet with Real-Time Camera Feed
+Transmitting a real-time video feed from the ROSbot XL to the RViz interface on a distant computer, while operating the robot using a Logitech F710 gamepad (or a teleop twist keyboard) linked to that computer. This setup functions across the Internet using Husarnet VPN.
 
-<!-- ![ROSbot ROS2 user interface](https://github-readme-figures.s3.eu-central-1.amazonaws.com/rosbot-xl/rosbot-telepresence/rosbot-xl-telepresence-rviz.png) -->
+> [!NOTE]
+> There are two setups on two separate branches available
+> | branch name | description |
+> | - | - |
+> | [**ros2router**](https://github.com/husarion/rosbot-xl-telepresence/tree/ros2router) | Running ROS 2 containers on ROSbot and on PC with the interface in RViz |
+> | [**foxglove**](https://github.com/husarion/rosbot-xl-telepresence/tree/foxglove) | Running ROS 2 containers only on ROSbot with a web user interface powered by Foxglove |
 
-There are two different setups on two separate branches:
+![ROSbot ROS2 user interface](.docs/rosbot-rviz.png)
 
-- [**ros2router**](https://github.com/husarion/rosbot-xl-telepresence/tree/ros2router) (the current one)
-- [**foxglove**](https://github.com/husarion/rosbot-xl-telepresence/tree/foxglove)
+## 🛍️ Necessary Hardware
+
+For the execution of this project, the following components are required:
+
+1. **[ROSbot XL](https://husarion.com/manuals/rosbot-xl/)** - with any SBC (RPi4, NUC or Jetson)
+2. **[Luxonis Camera](https://husarion.com/tutorials/ros-equipment/oak-1-lite/)** - OAK-1 or OAK-D models.
+
+These items are available for purchase as a complete kit at [our online store](https://store.husarion.com/collections/robots/products/rosbot-xl).
 
 ## Quick start
 
@@ -16,7 +27,7 @@ There are two different setups on two separate branches:
 >
 > Install it with:
 >
-> ```
+> ```bash
 > curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | sudo bash -s -- --to /usr/bin
 > ```
 
@@ -26,18 +37,18 @@ To see all available commands just run `just`:
 husarion@rosbotxl:~/rosbot-xl-telepresence$ just
 Available recipes:
     connect-husarnet joincode hostname # connect to Husarnet VPN network
-    flash-firmware    # flash the proper firmware for STM32 microcontroller in ROSbot 2R / 2 PRO
-    start-rosbot      # start containers on ROSbot 2R / 2 PRO
+    sync hostname="${ROBOT_NAMESPACE}" password="husarion" # Copy repo content to remote host with 'rsync' and watch for changes
+    flash-firmware    # flash the proper firmware for STM32 microcontroller in ROSbot XL
+    start-rosbot      # start containers on a physical ROSbot XL
     start-pc          # start containers on PC
+    run-joy           # start containers on PC
     run-teleop        # run teleop_twist_keybaord (host)
     run-teleop-docker # run teleop_twist_keybaord (inside rviz2 container)
-    run-joy           # enable the F710 gemapad (connected to your PC) to control ROSbot
-    sync hostname password="husarion" # copy repo content to remote host with 'rsync' and watch for changes
 ```
 
 ### 🌎 Step 1: Connecting ROSbot and Laptop over VPN
 
-Ensure that both ROSbot 2R (or ROSbot 2 PRO) and your laptop are linked to the same Husarnet VPN network. If they are not follow these steps:
+Ensure that both ROSbot XL and your laptop are linked to the same Husarnet VPN network. If they are not follow these steps:
 
 1. Setup a free account at [app.husarnet.com](https://app.husarnet.com/), create a new Husarnet network, click the **[Add element]** button and copy the code from the **Join Code** tab.
 2. Run in the linux terminal on your PC:
@@ -51,7 +62,8 @@ Ensure that both ROSbot 2R (or ROSbot 2 PRO) and your laptop are linked to the s
    export JOINCODE=<PASTE_YOUR_JOIN_CODE_HERE>
    sudo husarnet join $JOINCODE rosbotxl
    ```
-   > note that `rosbotxl` is a default ROSbot hostname used in this project. If you want to change it, edit the `.env` file and change
+   > [!IMPORTANT]
+   > note that `rosbotxl` is a default ROSbot hostname used in this project. If you want to change it, edit the `.env` file and change the line:
    > ```bash
    > ROBOT_NAMESPACE=rosbotxl
    > ```
@@ -61,57 +73,83 @@ Ensure that both ROSbot 2R (or ROSbot 2 PRO) and your laptop are linked to the s
 Copy the local changes (on PC) to the remote ROSbot
 
 ```bash
-just sync rosbotxl # or a different ROSbot hostname you used in Step 1 p.3 
+just sync rosbotxl # or a different ROSbot hostname you used in Step 1 p.3
 ```
 
-Now you should find `/home/husarion/rosbot-xl-telepresence` folder on your ROSbot's file system.
+> [!NOTE]
+> This `just sync` script locks the terminal and synchronizes online all changes made locally on the robot. `rosbotxl` is the name of device set in Husarnet.
 
-### 💻 Step 3: Launching the Control Interface on PC
+### 🔧 Step 3: Verifying User Configuration
 
-At first start the ROS 2 Router and RViz:
+To ensure proper user configuration, review the content of the `.env` file and select the appropriate configuration (the default options should be suitable).
+
+- **`LIDAR_BAUDRATE`** - depend on mounted LiDAR,
+- **`MECANUM`** - wheel type,
+- **`ROBOT_NAMESPACE`** - type your ROSbot device name the same as in Husarnet.
+
+> [!IMPORTANT]
+> The value of the `ROBOT_NAMESPACE` parameter in the `.env` file should be the same as the Husarnet hostname for ROSbot XL.
+
+### 🤖 Step 4: Running Docker Setup
+
+#### ROSbot
+
+1. Connect to the ROSbot.
+
+   ```bash
+   ssh husarion@rosbotxl
+   cd rosbot-xl-autonomy
+   ```
+
+   > [!NOTE]
+   > `rosbotxl` is the name of device set in Husarnet.
+
+2. Flashing the ROSbot's Firmware.
+
+   To flash the Micro-ROS based firmware for STM32F4 microcontroller responsible for low-level functionalities of ROSbot XL, execute in the ROSbot's shell:
+
+   ```bash
+   just flash-firmware
+   # or just flash
+   ```
+
+3. Running autonomy on ROSbot.
+
+   ```bash
+   just start-rosbot
+   # or just rosbot
+   ```
+
+#### PC
+
+To initiate RViz user interface, execute below command on your PC:
 
 ```bash
 just start-pc
+# or just pc
 ```
 
-And run `teleop_twist_keyboard` directly on the host OS or in Docker (choose one option):
+### 🚗 Step 5: Control the ROSbot from teleop / gamepad
+
+To control the robot from the `teleop_twist_keyboard` ROS 2 package run:
 
 ```bash
-just run-teleop-docker
-# or
-# just run-teleop
+just run-teleop
+# or just teleop
 ```
-
-### 🤖 Step 4: Launching the Containers on ROSbot
-
-> 
-> Execute the commands below in the ROSbot's shell (you can access it with `ssh husarion@rosbotxl`)
-
-Flash the right version of the firmware:
-
-```bash
-just flash-firmware
-```
-
-And run the containers
-
-```bash
-just start-rosbot
-```
-
-## Useful tips
-
-### 1. Using Logitech F710 gamepad
 
 Rather than employing the `teleop_twist_keyboard` ROS 2 package, you have the option to use the Logitech F710 gamepad. To utilize it, plug it into your PC's USB port and launch the `joy2twist` container on your PC:
 
 ```bash
 just run-joy
+# or just joy
 ```
 
 ![ROSbot control with gamepad](.docs/gamepad-legend.jpg)
 
-### 2. Checking a datarate
+## Useful tips
+
+### 1. Checking a datarate
 
 To assess the data rate of a video stream being transmitted over the Husarnet VPN (which appears in your OS as the `hnet0` network interface), execute the following:
 
@@ -122,40 +160,4 @@ husarion@rosbot:~$ ifstat -i hnet0
     6.83   2744.66
     1.67   2659.88
     1.02   2748.40
-```
-
-### 3. Sending uncompressed video frames over the network
-
-If raw image data is being transmitted over the network, you need to perform some [DDS-tunning](https://docs.ros.org/en/humble/How-To-Guides/DDS-tuning.html) (both on ROSbot and PC):
-
-For configs in LAN:
-
-```bash
-sudo sysctl -w net.ipv4.ipfrag_time=3 # 3s
-sudo sysctl -w net.ipv4.ipfrag_high_thresh=134217728 # (128 MB)
-```
-
-For configs over VPN:
-
-```bash
-sudo sysctl -w net.ipv6.ip6frag_time=3 # 3s
-sudo sysctl -w net.ipv6.ip6frag_high_thresh=134217728 # (128 MB)
-```
-
-## Troubleshooting
-
-###  `Packet was not a Theora header` warning
-
-The log from your computer where you launched `compose.pc.yaml` may contain the following message:
-
-```bash
-[WARN] [1704479601.591809892] [rviz]: [theora] Packet was not a Theora header
-```
-
-Due to an issue in the theora codec, headers are probably sent only at the start. If you've initiated `compose.pc.yaml` following `compose.yaml`, it's essential to restart the `astra` service on ROSbot.
-
-To do so, execute in the ROSbot's terminal in the `/home/husarion/rosbot-xl-telepresence` folder the following line:
-
-```bash
-docker compose restart astra
 ```
