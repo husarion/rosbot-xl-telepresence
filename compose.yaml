@@ -1,41 +1,51 @@
-x-common-config:
-  &common-config
-  network_mode: host
-  ipc: host
-  restart: unless-stopped
-
-x-dds-envs:
-  &dds-envs
-  env_file: .env.dds
-
 services:
 
-  ros2router:
-    image: husarnet/ros2router:1.9.0
-    <<: *common-config
+  foxglove:
+    image: husarion/foxglove:1.84.0
+    restart: unless-stopped
+    ports:
+      - 8080:8080
+      - 8765:8765
     volumes:
-      - ./filter.yaml:/filter.yaml
+      - ./params/RosbotTeleopFull.json:/foxglove/default-layout.json
     environment:
-      - USER
-      - PARTICIPANTS=husarnet,shm
+      # - DS_TYPE=rosbridge-websocket
+      # - DS_PORT=9090
+      - DS_TYPE=foxglove-websocket
+      - DS_PORT=8765
+      - DS_HOST=foxglove-ds
+      - UI_PORT=8080
+      - DISABLE_CACHE=true
+      - DISABLE_INTERACTION=false
+
+  # rosbridge-ds:
+  #   image: husarion/rosbridge-server:humble-1.3.1-20230831-stable
+  #   ports:
+  #     - 9090:9090
+  #   command: ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+
+  foxglove-ds:
+    # image: husarion/foxglove-bridge:humble-0.7.3-20240108
+    image: husarion/foxglove-bridge:humble-0.7.4-20240220
+    restart: unless-stopped
+    command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 capabilities:=[clientPublish,parameters,parametersSubscribe,services,connectionGraph,assets]
 
   rosbot:
     image: husarion/rosbot-xl:humble-0.10.0-20240216
-    <<:
-      - *common-config
-      - *dds-envs
+    restart: unless-stopped
     # devices:
     #   - /dev/ttyUSBDB # just for firmware flashing
     #   - /dev/bus/usb/ # just for firmware flashing
+    ports:
+      - 192.168.77.2:8888:8888/udp
     command: >
       ros2 launch /husarion_utils/rosbot.launch.py
         mecanum:=${MECANUM:-True}
+        healthcheck:=False
 
   luxonis:
     image: husarion/depthai:humble-2.8.1-20240127
-    <<:
-      - *common-config
-      - *dds-envs
+    restart: unless-stopped
     volumes:
       - /dev/bus/usb:/dev/bus/usb
       - ./params/oak-1.yaml:/params.yaml
@@ -44,3 +54,14 @@ services:
     command: >
       ros2 launch depthai_ros_driver camera.launch.py
         params_file:=/params.yaml
+
+  rplidar:
+    image: husarion/rplidar:humble-1.0.1-20240216
+    restart: unless-stopped
+    devices:
+      - /dev/ttyRPLIDAR:/dev/ttyUSB0
+    command: >
+      ros2 launch /husarion_utils/rplidar.launch.py
+        serial_baudrate:=${LIDAR_BAUDRATE:-256000}
+        serial_port:=/dev/ttyUSB0
+        healthcheck:=False

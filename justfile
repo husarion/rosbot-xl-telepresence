@@ -11,13 +11,7 @@ alias flash := flash-firmware
 [private]
 alias rosbot := start-rosbot
 [private]
-alias pc := start-pc
-[private]
-alias joy := run-joy
-[private]
 alias teleop := run-teleop
-[private]
-alias teleop-docker := run-teleop-docker
 
 [private]
 pre-commit:
@@ -38,7 +32,7 @@ connect-husarnet joincode hostname: _run-as-root
     husarnet join {{joincode}} {{hostname}}
 
 # Copy repo content to remote host with 'rsync' and watch for changes
-sync hostname="${ROBOT_NAMESPACE}" password="husarion": _install-rsync _run-as-user
+sync hostname="${ROBOT_HOSTNAME}" password="husarion": _install-rsync _run-as-user
     #!/bin/bash
     mkdir -m 775 -p maps
     sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --exclude='maps/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
@@ -69,28 +63,10 @@ start-rosbot: _run-as-user
     docker compose pull
     docker compose up
 
-# start containers on PC
-start-pc: _run-as-user
-    #!/bin/bash
-    xhost +local:docker
-    docker compose -f compose.pc.yaml up ros2router rviz
-
-# start containers on PC
-run-joy: _run-as-user
-    #!/bin/bash
-    xhost +local:docker
-    docker compose -f compose.pc.yaml up joy2twist
-
 # run teleop_twist_keybaord (host)
-run-teleop:
+run-teleop: _run-as-user
     #!/bin/bash
-    . .env.local
     ros2 run teleop_twist_keyboard teleop_twist_keyboard # --ros-args -r __ns:=/${ROBOT_NAMESPACE}
-
-# run teleop_twist_keybaord (inside rviz2 container)
-run-teleop-docker:
-    #!/bin/bash
-    docker compose -f compose.pc.yaml exec rviz /bin/bash -c "/ros_entrypoint.sh ros2 run teleop_twist_keyboard teleop_twist_keyboard"
 
 _run-as-root:
     #!/bin/bash

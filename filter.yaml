@@ -1,7 +1,0 @@
----
-allowlist:
-  - name: rt/oak/rgb/image_raw/ffmpeg
-    type: ffmpeg_image_transport_msgs::msg::dds_::FFMPEGPacket_
-  - name: rt/cmd_vel
-    type: geometry_msgs::msg::dds_::Twist_
-blocklist: []

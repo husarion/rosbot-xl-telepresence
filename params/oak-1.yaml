@@ -27,7 +27,7 @@
       i_tf_custom_urdf_location: ''
       i_tf_custom_xacro_args: ''
       i_tf_imu_from_descr: 'false'
-      i_tf_parent_frame: oak-1-base-frame
+      i_tf_parent_frame: cover_link
       i_usb_port_id: ''
       i_usb_speed: SUPER_PLUS
     diagnostic_updater:
@@ -56,7 +56,7 @@
       i_enable_nn: false
       i_enable_preview: false
       i_exposure_offset: 0
-      i_fps: 30.0
+      i_fps: 20.0
       i_fsync_continuous: false
       i_fsync_trigger: false
       i_get_base_device_timestamp: false
