@@ -1,6 +1,6 @@
 # rosbot-xl-telepresence
 
-Transmitting a real-time video feed from the ROSbot XL to the RViz interface on a distant computer, while operating the robot using a Logitech F710 gamepad (or a teleop twist keyboard) linked to that computer. This setup functions across the Internet using Husarnet VPN.
+Manual control & transmitting a real-time video feed from the ROSbot XL to online web user interface powered by Foxglove. This setup functions across the Internet using Husarnet VPN.
 
 > [!NOTE]
 > There are two setups on two separate branches available
@@ -37,13 +37,10 @@ To see all available commands just run `just`:
 husarion@rosbotxl:~/rosbot-xl-telepresence$ just
 Available recipes:
     connect-husarnet joincode hostname # connect to Husarnet VPN network
-    sync hostname="${ROBOT_NAMESPACE}" password="husarion" # Copy repo content to remote host with 'rsync' and watch for changes
-    flash-firmware    # flash the proper firmware for STM32 microcontroller in ROSbot XL
-    start-rosbot      # start containers on a physical ROSbot XL
-    start-pc          # start containers on PC
-    run-joy           # start containers on PC
-    run-teleop        # run teleop_twist_keybaord (host)
-    run-teleop-docker # run teleop_twist_keybaord (inside rviz2 container)
+    sync hostname="${ROBOT_HOSTNAME}" password="husarion" # Copy repo content to remote host with 'rsync' and watch for changes
+    flash-firmware # flash the proper firmware for STM32 microcontroller in ROSbot XL
+    start-rosbot   # start containers on a physical ROSbot XL
+    run-teleop     # run teleop_twist_keybaord (host)
 ```
 
 ### 🌎 Step 1: Connecting ROSbot and Laptop over VPN
@@ -68,16 +65,16 @@ Ensure that both ROSbot XL and your laptop are linked to the same Husarnet VPN n
 > ROBOT_NAMESPACE=rosbotxl
 > ```
 
+
 ### 📡 Step 2: Sync
 
-Copy the local changes (on PC) to the remote ROSbot
+If you have cloned this repo not on the robot but on your PC, you need to copy the local changes (on PC) to the remote ROSbot
 
 ```bash
 just sync rosbotxl # or a different ROSbot hostname you used in Step 1 p.3
 ```
 
-> [!NOTE]
-> This `just sync` script locks the terminal and synchronizes online all changes made locally on the robot. `rosbotxl` is the name of device set in Husarnet.
+> you can skip this step if you have cloned this repo on the ROSbot directly
 
 ### 🔧 Step 3: Verifying User Configuration
 
@@ -85,67 +82,31 @@ To ensure proper user configuration, review the content of the `.env` file and s
 
 - **`LIDAR_BAUDRATE`** - depend on mounted LiDAR,
 - **`MECANUM`** - wheel type,
-- **`ROBOT_NAMESPACE`** - type your ROSbot device name the same as in Husarnet.
+- **`ROBOT_HOSTNAME`** - type your ROSbot device name the same as in Husarnet.
 
 > [!IMPORTANT]
-> The value of the `ROBOT_NAMESPACE` parameter in the `.env` file should be the same as the Husarnet hostname for ROSbot XL.
+> The value of the `ROBOT_HOSTNAME` parameter in the `.env` file should be the same as the Husarnet hostname for ROSbot XL.
 
-### 🤖 Step 4: Running Docker Setup
+### 🤖 Step 4: Launching
 
-#### ROSbot
-
-1. Connect to the ROSbot.
-
-   ```bash
-   ssh husarion@rosbotxl
-   cd rosbot-xl-autonomy
-   ```
-
-   > [!NOTE]
-   > `rosbotxl` is the name of device set in Husarnet.
-
-2. Flashing the ROSbot's Firmware.
-
-   To flash the Micro-ROS based firmware for STM32F4 microcontroller responsible for low-level functionalities of ROSbot XL, execute in the ROSbot's shell:
-
-   ```bash
-   just flash-firmware
-   # or just flash
-   ```
-
-3. Running autonomy on ROSbot.
+Execute in the ROSbot's shell:
 
    ```bash
    just start-rosbot
    # or just rosbot
    ```
 
-#### PC
-
-To initiate RViz user interface, execute below command on your PC:
-
-```bash
-just start-pc
-# or just pc
-```
-
 ### 🚗 Step 5: Control the ROSbot from teleop / gamepad
 
-To control the robot from the `teleop_twist_keyboard` ROS 2 package run:
+Open the **Google Chrome** browser on your laptop and navigate to:
 
-```bash
-just run-teleop
-# or just teleop
-```
+<http://rosbotxl:8080/ui>
+<!-- 
+![foxglove UI](.docs/foxglove-ui.png) -->
 
-Rather than employing the `teleop_twist_keyboard` ROS 2 package, you have the option to use the Logitech F710 gamepad. To utilize it, plug it into your PC's USB port and launch the `joy2twist` container on your PC:
+> [!IMPORTANT]
+> Due to efficiency and official manufacturer support, it is recommended to use `foxglove-websocket`. When using `rosbridge-websocket`, it is necessary to edit `Custom Layers` to visualize the robot mesh.
 
-```bash
-just run-joy
-# or just joy
-```
-
-![ROSbot control with gamepad](.docs/gamepad-legend.jpg)
 
 ## Useful tips
 

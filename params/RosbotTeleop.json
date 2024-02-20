@@ -1,0 +1,133 @@
+{
+    "configById": {
+      "Image!3pr514n": {
+        "cameraState": {
+          "distance": 20,
+          "perspective": true,
+          "phi": 60,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "targetOffset": [
+            0,
+            0,
+            0
+          ],
+          "targetOrientation": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "thetaOffset": 45,
+          "fovy": 45,
+          "near": 0.5,
+          "far": 5000
+        },
+        "followMode": "follow-pose",
+        "scene": {},
+        "transforms": {},
+        "topics": {},
+        "layers": {},
+        "publish": {
+          "type": "point",
+          "poseTopic": "/move_base_simple/goal",
+          "pointTopic": "/clicked_point",
+          "poseEstimateTopic": "/initialpose",
+          "poseEstimateXDeviation": 0.5,
+          "poseEstimateYDeviation": 0.5,
+          "poseEstimateThetaDeviation": 0.26179939
+        },
+        "imageMode": {
+          "imageTopic": "/oak/rgb/image_raw/compressed",
+          "synchronize": false,
+          "rotation": 0,
+          "annotations": {}
+        }
+      },
+      "Teleop!jo9z4f": {
+        "publishRate": 10,
+        "upButton": {
+          "field": "linear-x",
+          "value": 0.2
+        },
+        "downButton": {
+          "field": "linear-x",
+          "value": -0.2
+        },
+        "leftButton": {
+          "field": "angular-z",
+          "value": 1
+        },
+        "rightButton": {
+          "field": "angular-z",
+          "value": -1
+        },
+        "topic": "/cmd_vel"
+      },
+      "RosOut!b0toow": {
+        "searchTerms": [],
+        "minLogLevel": 1
+      },
+      "Gauge!35smwvj": {
+        "path": "/battery_state.voltage",
+        "minValue": 8,
+        "maxValue": 12.5,
+        "colorMap": "turbo",
+        "colorMode": "colormap",
+        "gradient": [
+          "#0000ff",
+          "#ff00ff"
+        ],
+        "reverse": false
+      },
+      "Plot!n3omhv": {
+        "paths": [
+          {
+            "value": "/battery_state.voltage",
+            "enabled": true,
+            "timestampMethod": "receiveTime"
+          }
+        ],
+        "minYValue": 8,
+        "maxYValue": 13,
+        "showXAxisLabels": true,
+        "showYAxisLabels": true,
+        "showLegend": false,
+        "legendDisplay": "floating",
+        "showPlotValuesInLegend": false,
+        "isSynced": true,
+        "xAxisVal": "timestamp",
+        "sidebarDimension": 240,
+        "foxglovePanelTitle": "Plot"
+      }
+    },
+    "globalVariables": {},
+    "userNodes": {},
+    "playbackConfig": {
+      "speed": 1
+    },
+    "layout": {
+      "direction": "row",
+      "first": {
+        "first": "Image!3pr514n",
+        "second": "Teleop!jo9z4f",
+        "direction": "column",
+        "splitPercentage": 74.4611365120836
+      },
+      "second": {
+        "first": {
+          "first": "RosOut!b0toow",
+          "second": "Gauge!35smwvj",
+          "direction": "column",
+          "splitPercentage": 54.57809694793537
+        },
+        "second": "Plot!n3omhv",
+        "direction": "column",
+        "splitPercentage": 64.17050691244239
+      },
+      "splitPercentage": 73.79526105980983
+    }
+  }

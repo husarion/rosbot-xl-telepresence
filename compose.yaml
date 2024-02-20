@@ -7,7 +7,8 @@ services:
       - 8080:8080
       - 8765:8765
     volumes:
-      - ./params/RosbotTeleopFull.json:/foxglove/default-layout.json
+      - ./params/RosbotTeleop.json:/foxglove/default-layout.json
+      # - ./params/RosbotTeleopFull.json:/foxglove/default-layout.json
     environment:
       # - DS_TYPE=rosbridge-websocket
       # - DS_PORT=9090
@@ -55,13 +56,13 @@ services:
       ros2 launch depthai_ros_driver camera.launch.py
         params_file:=/params.yaml
 
-  rplidar:
-    image: husarion/rplidar:humble-1.0.1-20240216
-    restart: unless-stopped
-    devices:
-      - /dev/ttyRPLIDAR:/dev/ttyUSB0
-    command: >
-      ros2 launch /husarion_utils/rplidar.launch.py
-        serial_baudrate:=${LIDAR_BAUDRATE:-256000}
-        serial_port:=/dev/ttyUSB0
-        healthcheck:=False
+  # rplidar:
+  #   image: husarion/rplidar:humble-1.0.1-20240216
+  #   restart: unless-stopped
+  #   devices:
+  #     - /dev/ttyRPLIDAR:/dev/ttyUSB0
+  #   command: >
+  #     ros2 launch /husarion_utils/rplidar.launch.py
+  #       serial_baudrate:=${LIDAR_BAUDRATE:-256000}
+  #       serial_port:=/dev/ttyUSB0
+  #       healthcheck:=False
