@@ -1,6 +1,16 @@
 ---
 /oak:
   ros__parameters:
+    # qos_overrides:
+    #   /parameter_events:
+    #     publisher:
+    #       reliability: best_effort
+      # /oak/rgb/image_raw:
+      #   publisher:
+      #     reliability: best_effort
+      # /oak/rgb/image_raw/compressed:
+      #   publisher:
+      #     reliability: best_effort
     camera:
       i_calibration_dump: false
       i_enable_imu: false

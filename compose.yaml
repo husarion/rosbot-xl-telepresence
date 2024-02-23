@@ -29,7 +29,7 @@ services:
     # image: husarion/foxglove-bridge:humble-0.7.3-20240108
     image: husarion/foxglove-bridge:humble-0.7.4-20240220
     restart: unless-stopped
-    command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 capabilities:=[clientPublish,parameters,parametersSubscribe,services,connectionGraph,assets]
+    command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 capabilities:=[clientPublish,connectionGraph,assets]
 
   rosbot:
     image: husarion/rosbot-xl:humble-0.10.0-20240216
@@ -44,7 +44,30 @@ services:
         mecanum:=${MECANUM:-True}
         healthcheck:=False
 
+  # deptahai_ros driver provides /oak/rgb/image_raw/compressed topic with reliable QoS.
+  # For telepresence application best_effort QoS is better, because retranmission of the image is not needed.
+  # foxglove-ds creates a subscriber with the "minimum quality" QoS, which can be best_effort if another 
+  # publisher for /oak/rgb/image_raw/compressed topic is present. Let's do it with ros2router.
+  # read more:
+  # 1. https://github.com/foxglove/ros-foxglove-bridge/blob/main/ros2_foxglove_bridge/src/ros2_foxglove_bridge.cpp#L498
+  # 2. https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html#qos-compatibilities
+  qos-forcer:
+    image: husarnet/ros2router:1.9.0
+    environment:
+      - PARTICIPANTS=lo,if-eth0 # eth0 -is the name of the network interface from a Docker network in the container
+      - |
+        FILTER=
+          builtin-topics:
+            - name: rt/oak/rgb/image_raw/compressed
+              type: sensor_msgs::msg::dds_::CompressedImage_
+          topics:
+            - name: rt/oak/rgb/image_raw*
+              qos:
+                reliability: false
+                durability: false
+    
   luxonis:
+    # image: husarion/depthai:humble-qos_overrides #humble-2.8.1-20240127
     image: husarion/depthai:humble-2.8.1-20240127
     restart: unless-stopped
     volumes:
