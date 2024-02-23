@@ -7,8 +7,8 @@ services:
       - 8080:8080
       - 8765:8765
     volumes:
-      - ./params/RosbotTeleop.json:/foxglove/default-layout.json
-      # - ./params/RosbotTeleopFull.json:/foxglove/default-layout.json
+      # - ./params/RosbotTeleop.json:/foxglove/default-layout.json
+      - ./params/RosbotTeleopFull.json:/foxglove/default-layout.json
     environment:
       # - DS_TYPE=rosbridge-websocket
       # - DS_PORT=9090
@@ -51,20 +51,21 @@ services:
   # read more:
   # 1. https://github.com/foxglove/ros-foxglove-bridge/blob/main/ros2_foxglove_bridge/src/ros2_foxglove_bridge.cpp#L498
   # 2. https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html#qos-compatibilities
-  qos-forcer:
-    image: husarnet/ros2router:1.9.0
-    environment:
-      - PARTICIPANTS=lo,if-eth0 # eth0 -is the name of the network interface from a Docker network in the container
-      - |
-        FILTER=
-          builtin-topics:
-            - name: rt/oak/rgb/image_raw/compressed
-              type: sensor_msgs::msg::dds_::CompressedImage_
-          topics:
-            - name: rt/oak/rgb/image_raw*
-              qos:
-                reliability: false
-                durability: false
+  # qos-forcer:
+  #   image: husarnet/ros2router:1.9.0
+  #   environment:
+  #     - PARTICIPANTS=lo,if-eth0 # eth0 -is the name of the network interface from a Docker network in the container
+  #     - |
+  #       FILTER=
+  #         builtin-topics:
+  #           - name: rt/oak/rgb/image_raw/compressed
+  #             type: sensor_msgs::msg::dds_::CompressedImage_
+  #         topics:
+  #           - name: rt/oak/rgb/image_raw*
+  #             qos:
+  #               reliability: false
+  #               durability: false
+  #               history-depth: 1
     
   luxonis:
     # image: husarion/depthai:humble-qos_overrides #humble-2.8.1-20240127
@@ -79,13 +80,13 @@ services:
       ros2 launch depthai_ros_driver camera.launch.py
         params_file:=/params.yaml
 
-  # rplidar:
-  #   image: husarion/rplidar:humble-1.0.1-20240216
-  #   restart: unless-stopped
-  #   devices:
-  #     - /dev/ttyRPLIDAR:/dev/ttyUSB0
-  #   command: >
-  #     ros2 launch /husarion_utils/rplidar.launch.py
-  #       serial_baudrate:=${LIDAR_BAUDRATE:-256000}
-  #       serial_port:=/dev/ttyUSB0
-  #       healthcheck:=False
+  rplidar:
+    image: husarion/rplidar:humble-1.0.1-20240216
+    restart: unless-stopped
+    devices:
+      - /dev/ttyRPLIDAR:/dev/ttyUSB0
+    command: >
+      ros2 launch /husarion_utils/rplidar.launch.py
+        serial_baudrate:=${LIDAR_BAUDRATE:-256000}
+        serial_port:=/dev/ttyUSB0
+        healthcheck:=False
