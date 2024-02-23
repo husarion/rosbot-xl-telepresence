@@ -22,7 +22,7 @@
       i_pipeline_type: RGB
       i_publish_tf_from_calibration: false # false
       i_restart_on_diagnostics_error: false
-      i_tf_base_frame: cover_link
+      i_tf_base_frame: oak
       i_tf_cam_pitch: '0.0'
       i_tf_cam_pos_x: '0.0'
       i_tf_cam_pos_y: '0.0'
