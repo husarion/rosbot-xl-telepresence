@@ -70,12 +70,12 @@
       i_fsync_continuous: false
       i_fsync_trigger: false
       i_get_base_device_timestamp: false
-      i_height: 720 #720
+      i_height: 432 #720
       i_interleaved: false
-      i_isp_den: 3 #3 #3 valid if i_output_isp: true
+      i_isp_den: 5 #3 #3 valid if i_output_isp: true
       i_isp_num: 2 #2 valid if i_output_isp: true
       i_keep_preview_aspect_ratio: true
-      i_low_bandwidth: false #false
+      i_low_bandwidth: true #false
       i_low_bandwidth_quality: 20
       i_max_q_size: 30
       # i_width: 1280 #valid if i_output_isp: false
@@ -97,7 +97,7 @@
       i_simulate_from_topic: false
       i_simulated_topic_name: ''
       i_update_ros_base_time_on_ros_msg: false
-      i_width: 1280 #1280
+      i_width: 768 #1280
       r_exposure: 20000
       r_focus: 1
       r_iso: 800

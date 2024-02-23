@@ -46,8 +46,8 @@ services:
 
   # deptahai_ros driver provides /oak/rgb/image_raw/compressed topic with reliable QoS.
   # For telepresence application best_effort QoS is better, because retranmission of the image is not needed.
-  # foxglove-ds creates a subscriber with the "minimum quality" QoS, which can be best_effort if another 
-  # publisher for /oak/rgb/image_raw/compressed topic is present. Let's do it with ros2router.
+  # foxglove-ds creates a subscriber with the "minimum quality" QoS, which is best_effort if another 
+  # publisher with best_effort QoS for /oak/rgb/image_raw/compressed topic is present. Let's do it with ros2router.
   # read more:
   # 1. https://github.com/foxglove/ros-foxglove-bridge/blob/main/ros2_foxglove_bridge/src/ros2_foxglove_bridge.cpp#L498
   # 2. https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html#qos-compatibilities
@@ -72,7 +72,7 @@ services:
     restart: unless-stopped
     volumes:
       - /dev/bus/usb:/dev/bus/usb
-      - ./params/oak-1.yaml:/params.yaml
+      - ./params/oak-1-low-bandwidth.yaml:/params.yaml
     device_cgroup_rules:
       - 'c 189:* rmw'
     command: >
