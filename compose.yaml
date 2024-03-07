@@ -7,8 +7,8 @@ services:
       - 8080:8080
       - 8765:8765
     volumes:
-      # - ./params/RosbotTeleop.json:/foxglove/default-layout.json
-      - ./params/RosbotTeleopFull.json:/foxglove/default-layout.json
+      - ./params/RosbotTeleop.json:/foxglove/default-layout.json
+      # - ./params/RosbotTeleopFull.json:/foxglove/default-layout.json
     environment:
       # - DS_TYPE=rosbridge-websocket
       # - DS_PORT=9090
@@ -27,7 +27,8 @@ services:
 
   foxglove-ds:
     # image: husarion/foxglove-bridge:humble-0.7.3-20240108
-    image: husarion/foxglove-bridge:humble-0.7.4-20240220
+    # image: husarion/foxglove-bridge:humble-0.7.4-20240220
+    image: husarion/foxglove-bridge:humble-0.7.4-20240307
     restart: unless-stopped
     command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 capabilities:=[clientPublish,connectionGraph,assets]
 
@@ -42,6 +43,7 @@ services:
     command: >
       ros2 launch /husarion_utils/rosbot.launch.py
         mecanum:=${MECANUM:-True}
+        include_camera_mount:=True
         healthcheck:=False
 
   # deptahai_ros driver provides /oak/rgb/image_raw/compressed topic with reliable QoS.
