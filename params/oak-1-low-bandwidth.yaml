@@ -35,7 +35,7 @@
       i_tf_custom_xacro_args: ''
       i_tf_imu_from_descr: 'false'
       # i_tf_parent_frame: oak-d-base-frame
-      i_tf_parent_frame: camera_mout_link
+      i_tf_parent_frame: camera_mount_link
       i_usb_port_id: ''
       i_usb_speed: SUPER_PLUS
     diagnostic_updater:
