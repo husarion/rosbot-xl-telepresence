@@ -1,8 +1,8 @@
 x-common-config:
   &common-config
   network_mode: host
-  ipc: host
-  pid: host
+  ipc: host 
+  pid: host # ?
   restart: unless-stopped
 
 x-dds-envs:
@@ -97,17 +97,17 @@ services:
         params_file:=/params.yaml
         parent_frame:=camera_mount_link
 
-  rplidar:
-    image: husarion/rplidar:humble-1.0.1-20240216
-    <<:
-      - *common-config
-      - *dds-envs
-    devices:
-      - /dev/ttyRPLIDAR:/dev/ttyUSB0
-    depends_on:
-      rosbot: { condition: service_healthy }
-    command: >
-      ros2 launch /husarion_utils/rplidar.launch.py
-        serial_baudrate:=${LIDAR_BAUDRATE:-256000}
-        serial_port:=/dev/ttyUSB0
-        healthcheck:=True
+  # rplidar:
+  #   image: husarion/rplidar:humble-1.0.1-20240216
+  #   <<:
+  #     - *common-config
+  #     - *dds-envs
+  #   devices:
+  #     - /dev/ttyRPLIDAR:/dev/ttyUSB0
+  #   depends_on:
+  #     rosbot: { condition: service_healthy }
+  #   command: >
+  #     ros2 launch /husarion_utils/rplidar.launch.py
+  #       serial_baudrate:=${LIDAR_BAUDRATE:-256000}
+  #       serial_port:=/dev/ttyUSB0
+  #       healthcheck:=True
