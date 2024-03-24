@@ -17,7 +17,8 @@ services:
       - 8080:8080
       # - 8765:8766
     volumes:
-      - ./params/RosbotTeleopFull.json:/foxglove/default-layout.json
+      # - ./params/RosbotTeleopFull.json:/foxglove/default-layout.json
+      - ./params/ROSbotXL.json:/foxglove/default-layout.json
     depends_on:
       # rplidar: { condition: service_healthy }
       rosbot: { condition: service_healthy }
@@ -65,22 +66,22 @@ services:
         healthcheck:=True
 
  
-  # luxonis:
-  #   image: husarion/depthai:humble-2.8.1-20240127
-  #   <<:
-  #     - *common-config
-  #     - *dds-envs
-  #   volumes:
-  #     - /dev/bus/usb:/dev/bus/usb
-  #     - ./params/oak-1-low-bandwidth.yaml:/params.yaml
-  #   device_cgroup_rules:
-  #     - 'c 189:* rmw'
-  #   depends_on:
-  #     rosbot: { condition: service_healthy }
-  #   command: >
-  #     ros2 launch depthai_ros_driver camera.launch.py
-  #       params_file:=/params.yaml
-  #       parent_frame:=camera_mount_link
+  luxonis:
+    image: husarion/depthai:humble-2.8.1-20240127
+    <<:
+      - *common-config
+      - *dds-envs
+    volumes:
+      - /dev/bus/usb:/dev/bus/usb
+      - ./params/oak-1-low-bandwidth.yaml:/params.yaml
+    device_cgroup_rules:
+      - 'c 189:* rmw'
+    depends_on:
+      rosbot: { condition: service_healthy }
+    command: >
+      ros2 launch depthai_ros_driver camera.launch.py
+        params_file:=/params.yaml
+        parent_frame:=camera_mount_link
 
   # rplidar:
   #   image: husarion/rplidar:humble-1.0.1-20240216
