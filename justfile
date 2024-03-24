@@ -57,7 +57,6 @@ flash-firmware: _install-yq _run-as-user
 # start containers on a physical ROSbot XL
 start-rosbot: _run-as-user
     #!/bin/bash
-    mkdir -m 775 -p maps
     docker compose down
     docker compose pull
     docker compose up
