@@ -2,6 +2,7 @@ x-common-config:
   &common-config
   network_mode: host
   ipc: host
+  pid: host
   restart: unless-stopped
 
 x-dds-envs:
@@ -54,11 +55,24 @@ services:
     # command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 capabilities:=[clientPublish,connectionGraph,assets]
     # command: tail -f /dev/null
 
+  teleop_twist_joy:
+    image: husarion/teleop-twist-joy:humble-2.4.5-20240318
+    depends_on:
+      rosbot: { condition: service_healthy }
+    <<:
+      - *common-config
+      - *dds-envs
+    command: ros2 run teleop_twist_joy teleop_node --ros-args --params-file /teleop_twist_joy_f710_params.yaml
+
   rosbot:
     image: husarion/rosbot-xl:humble-0.10.0-20240216
     <<:
       - *common-config
       - *dds-envs
+    # command: >
+    #   ros2 launch /husarion_utils/rosbot.launch.py
+    #     mecanum:=${MECANUM:-True}
+    #     healthcheck:=True
     command: >
       ros2 launch /husarion_utils/rosbot.launch.py
         mecanum:=${MECANUM:-True}
