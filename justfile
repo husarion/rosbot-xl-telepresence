@@ -34,10 +34,9 @@ connect-husarnet joincode hostname: _run-as-root
 # Copy repo content to remote host with 'rsync' and watch for changes
 sync hostname="${ROBOT_HOSTNAME}" password="husarion": _install-rsync _run-as-user
     #!/bin/bash
-    mkdir -m 775 -p maps
-    sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --exclude='maps/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
-    while inotifywait -r -e modify,create,delete,move ./ --exclude='.git/' --exclude='maps/' ; do
-        sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --exclude='maps/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
+    sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
+    while inotifywait -r -e modify,create,delete,move ./ --exclude='.git/' ; do
+        sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
     done
 
 # flash the proper firmware for STM32 microcontroller in ROSbot XL

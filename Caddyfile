@@ -1,0 +1,4 @@
+:8765 {
+	# Reverse Proxy for foxglove-datasource
+	reverse_proxy ws://localhost:8766
+}
