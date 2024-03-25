@@ -12,6 +12,8 @@ alias flash := flash-firmware
 alias rosbot := start-rosbot
 [private]
 alias teleop := run-teleop
+[private]
+alias foxglove := run-foxglove
 
 [private]
 pre-commit:
@@ -60,6 +62,78 @@ start-rosbot: _run-as-user
     docker compose down
     docker compose pull
     docker compose up
+
+# run teleop_twist_keybaord (host)
+run-foxglove runtime="cpu": _run-as-user
+    #!/bin/bash
+    if  [[ "{{runtime}}" == "nvidia" ]] ; then
+        echo "Docker runtime: nvidia"
+        export DOCKER_RUNTIME=nvidia
+        export LIBGL_ALWAYS_SOFTWARE=0
+    else
+        echo "Docker runtime: runc"
+        export DOCKER_RUNTIME=runc
+        export LIBGL_ALWAYS_SOFTWARE=1
+    fi
+
+    xhost +local:docker
+    docker compose -f compose.pc.yaml pull
+    docker compose -f compose.pc.yaml up foxglove
+
+remove-launcher:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sudo rm -rf "$HOME/.local/share/applications/rosbot_xl_telepresence.desktop"
+    update-desktop-database "$HOME/.local/share/applications/"
+    echo "Application launcher for ROSbot XL telepresence UI removed."
+    # Remove application launcher from the Ubuntu dock
+    # Extract the current list of favorites
+    FAVORITES=$(gsettings get org.gnome.shell favorite-apps)
+
+    # Modify the favorites list to remove the launcher, if present
+    NEW_FAVORITES=$(echo $FAVORITES | sed "s/'rosbot_xl_telepresence.desktop',//g" | sed "s/, 'rosbot_xl_telepresence.desktop'//g" | sed "s/'rosbot_xl_telepresence.desktop'//g")
+
+    # Update the list of favorites
+    gsettings set org.gnome.shell favorite-apps "$NEW_FAVORITES"
+
+    echo "Application launcher for Foxglove ROSbot XL removed from the dock."
+
+install-launcher:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    LAUNCHER_PATH="$HOME/.local/share/applications/rosbot_xl_telepresence.desktop"
+    CURRENT_DIR=$(pwd)
+    ICON_PATH="${CURRENT_DIR}/husarion-signet.png"
+
+    echo "[Desktop Entry]
+    Version=1.0
+    Type=Application
+    Name=ROSbot XL telepresence UI
+    Exec=gnome-terminal -- bash -c 'just foxglove runc'
+    Icon=${ICON_PATH}
+    Path=${CURRENT_DIR}
+    Terminal=false
+    StartupNotify=false" > "${LAUNCHER_PATH}"
+
+    sudo chmod +x "${LAUNCHER_PATH}"
+    update-desktop-database "$HOME/.local/share/applications/"
+    echo "Application launcher for ROSbot XL telepresence UI installed."
+
+    # Add application launcher to the Ubuntu dock if not already present
+    FAVORITES=$(gsettings get org.gnome.shell favorite-apps)
+    LAUNCHER_ID="'rosbot_xl_telepresence.desktop'"
+
+    # Check if the launcher is already in the list of favorites
+    if [[ $FAVORITES != *"$LAUNCHER_ID"* ]]; then
+        # If not, add it to the list
+        NEW_FAVORITES=$(echo $FAVORITES | sed -e "s/]$/, $LAUNCHER_ID]/")
+        gsettings set org.gnome.shell favorite-apps "$NEW_FAVORITES"
+        echo "Application launcher for ROSbot XL telepresence UI added to the dock."
+    else
+        echo "Application launcher for ROSbot XL telepresence UI is already in the dock."
+    fi
+
 
 # run teleop_twist_keybaord (host)
 run-teleop: _run-as-user

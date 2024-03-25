@@ -1,0 +1,17 @@
+services:
+  foxglove:
+    image: husarion/foxglove-desktop:1.87.0
+    network_mode: host
+    runtime: ${DOCKER_RUNTIME:-runc}
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - /run/udev/data/:/run/udev/data/
+      - ./params/foxglove-desktop-telepresence-rosbotxl.json:/root/layouts/layout.json
+      - /root # for saving settings
+    devices:
+      - /dev/input
+    environment:
+      - DISPLAY=${DISPLAY:?err}
+      - LIBGL_ALWAYS_SOFTWARE=${LIBGL_ALWAYS_SOFTWARE:-1}
+      - NVIDIA_VISIBLE_DEVICES=all # if LIBGL_ALWAYS_SOFTWARE=1 this env var is ignored
+      - NVIDIA_DRIVER_CAPABILITIES=all # if LIBGL_ALWAYS_SOFTWARE=1 this env var is ignored
