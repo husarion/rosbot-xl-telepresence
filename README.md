@@ -33,11 +33,15 @@ To see all available commands just run `just`:
 ```bash
 husarion@rosbotxl:~/rosbot-xl-telepresence$ just
 Available recipes:
-    connect-husarnet joincode hostname # connect to Husarnet VPN network
-    sync hostname="${ROBOT_HOSTNAME}" password="husarion" # Copy repo content to remote host with 'rsync' and watch for changes
-    flash-firmware # flash the proper firmware for STM32 microcontroller in ROSbot XL
-    start-rosbot   # start containers on a physical ROSbot XL
-    run-teleop     # run teleop_twist_keybaord (host)
+    connect-husarnet joincode hostname # [PC] connect to Husarnet VPN network
+    sync hostname="${ROBOT_HOSTNAME}" password="husarion" # [PC] Copy repo content to remote host with 'rsync' and watch for changes
+    flash-firmware             # [ROSbot] flash the proper firmware for STM32 microcontroller in ROSbot XL
+    start-rosbot               # [ROSbot] start containers on a physical ROSbot XL
+    run-teleop                 # [ROSbot] run teleop_twist_keybaord
+    run-foxglove runtime="cpu" # [PC] run Foxglove Desktop on your PC (optional)
+    remove-launcher            # [PC] remove Foxglove Desktop launcher from the dock (optional)
+    install-launcher           # [PC] install Foxglove Desktop launcher on the dock (optional)
+    config                     # source ROS 2 workspace
 ```
 
 ### 🌎 Step 1: Connecting ROSbot and Laptop over VPN
@@ -139,7 +143,7 @@ husarion@rosbot:~$ ifstat -i hnet0
     1.67   2659.88
     1.02   2748.40
 ```
-### 2. Insufficient permissions
+### 2. Insufficient permissions for Luxonis camera
 
 Based on this [Depthai troubleshooting guide](https://github.com/luxonis/depthai-docs-website/blob/master/source/pages/troubleshooting.rst#udev-rules-on-linux)
 

@@ -24,7 +24,7 @@ pre-commit:
     fi
     pre-commit run -a
 
-# connect to Husarnet VPN network
+# [PC] connect to Husarnet VPN network
 connect-husarnet joincode hostname: _run-as-root
     #!/bin/bash
     if ! command -v husarnet > /dev/null; then
@@ -33,7 +33,7 @@ connect-husarnet joincode hostname: _run-as-root
     fi
     husarnet join {{joincode}} {{hostname}}
 
-# Copy repo content to remote host with 'rsync' and watch for changes
+# [PC] Copy repo content to remote host with 'rsync' and watch for changes
 sync hostname="${ROBOT_HOSTNAME}" password="husarion": _install-rsync _run-as-user
     #!/bin/bash
     sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
@@ -41,7 +41,7 @@ sync hostname="${ROBOT_HOSTNAME}" password="husarion": _install-rsync _run-as-us
         sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
     done
 
-# flash the proper firmware for STM32 microcontroller in ROSbot XL
+# [ROSbot] flash the proper firmware for STM32 microcontroller in ROSbot XL
 flash-firmware: _install-yq _run-as-user
     #!/bin/bash
     echo "Stopping all running containers"
@@ -56,14 +56,20 @@ flash-firmware: _install-yq _run-as-user
         ros2 run rosbot_xl_utils flash_firmware --port /dev/ttyUSBDB
         # flash-firmware.py -p /dev/ttyUSBDB # todo
 
-# start containers on a physical ROSbot XL
+# [ROSbot] start containers on a physical ROSbot XL
 start-rosbot: _run-as-user
     #!/bin/bash
     docker compose down
     docker compose pull
     docker compose up
 
-# run teleop_twist_keybaord (host)
+# [ROSbot] run teleop_twist_keybaord
+run-teleop: _run-as-user
+    #!/bin/bash
+    source .env.local
+    ros2 run teleop_twist_keyboard teleop_twist_keyboard # --ros-args -r __ns:=/${ROBOT_NAMESPACE}
+
+# [PC] run Foxglove Desktop on your PC (optional)
 run-foxglove runtime="cpu": _run-as-user
     #!/bin/bash
     if  [[ "{{runtime}}" == "nvidia" ]] ; then
@@ -80,6 +86,7 @@ run-foxglove runtime="cpu": _run-as-user
     docker compose -f compose.pc.yaml pull
     docker compose -f compose.pc.yaml up foxglove
 
+# [PC] remove Foxglove Desktop launcher from the dock (optional)
 remove-launcher:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -98,6 +105,7 @@ remove-launcher:
 
     echo "Application launcher for Foxglove ROSbot XL removed from the dock."
 
+# [PC] install Foxglove Desktop launcher on the dock (optional)
 install-launcher:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -133,12 +141,6 @@ install-launcher:
     else
         echo "Application launcher for ROSbot XL telepresence UI is already in the dock."
     fi
-
-
-# run teleop_twist_keybaord (host)
-run-teleop: _run-as-user
-    #!/bin/bash
-    ros2 run teleop_twist_keyboard teleop_twist_keyboard # --ros-args -r __ns:=/${ROBOT_NAMESPACE}
 
 _run-as-root:
     #!/bin/bash
