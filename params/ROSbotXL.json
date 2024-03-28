@@ -1,0 +1,253 @@
+{
+  "configById": {
+    "3D!1hjkoi9": {
+      "cameraState": {
+        "perspective": true,
+        "distance": 1.6198942163498944,
+        "phi": 79.59145488510786,
+        "thetaOffset": 88.88640568804543,
+        "targetOffset": [
+          0.6629383237502144,
+          -0.03717204031913667,
+          5.566716984138977e-17
+        ],
+        "target": [
+          0,
+          0,
+          0
+        ],
+        "targetOrientation": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "fovy": 45,
+        "near": 0.5,
+        "far": 5000
+      },
+      "followMode": "follow-pose",
+      "scene": {
+        "meshUpAxis": "z_up"
+      },
+      "transforms": {
+        "frame:body_link": {
+          "visible": false
+        },
+        "frame:base_link": {
+          "visible": false
+        },
+        "frame:fl_range": {
+          "visible": false
+        },
+        "frame:fr_range": {
+          "visible": false
+        },
+        "frame:rl_range": {
+          "visible": false
+        },
+        "frame:rr_range": {
+          "visible": false
+        },
+        "frame:camera_link": {
+          "visible": false
+        },
+        "frame:cover_link": {
+          "visible": false
+        },
+        "frame:imu_link": {
+          "visible": false
+        },
+        "frame:camera_color_optical_frame": {
+          "visible": false
+        },
+        "frame:camera_color_frame": {
+          "visible": false
+        },
+        "frame:camera_depth_optical_frame": {
+          "visible": false
+        },
+        "frame:camera_depth_frame": {
+          "visible": false
+        },
+        "frame:camera_orbbec_astra_link": {
+          "visible": false
+        },
+        "frame:slamtec_rplidar_a2_link": {
+          "visible": false
+        },
+        "frame:laser": {
+          "visible": false
+        },
+        "frame:odom": {
+          "visible": false
+        },
+        "frame:fl_wheel_link": {
+          "visible": false
+        },
+        "frame:fr_wheel_link": {
+          "visible": false
+        },
+        "frame:rl_wheel_link": {
+          "visible": false
+        },
+        "frame:rr_wheel_link": {
+          "visible": false
+        },
+        "frame:oak": {
+          "visible": false
+        },
+        "frame:camera_mount_link": {
+          "visible": false
+        },
+        "frame:oak_imu_frame": {
+          "visible": false
+        },
+        "frame:oak_left_camera_frame": {
+          "visible": false
+        },
+        "frame:oak_left_camera_optical_frame": {
+          "visible": false
+        },
+        "frame:oak_model_origin": {
+          "visible": false
+        },
+        "frame:oak_rgb_camera_frame": {
+          "visible": false
+        },
+        "frame:oak_rgb_camera_optical_frame": {
+          "visible": false
+        },
+        "frame:oak_right_camera_frame": {
+          "visible": false
+        },
+        "frame:oak_right_camera_optical_frame": {
+          "visible": false
+        },
+        "frame:antenna_link": {
+          "visible": false
+        },
+        "frame:antenna_connector_link": {
+          "visible": false
+        },
+        "frame:camera_mount_mid_link": {
+          "visible": false
+        },
+        "frame:camera_mount_bot_link": {
+          "visible": false
+        },
+        "frame:camera_mount_top_link": {
+          "visible": false
+        },
+        "frame:slamtec_rplidar_s1_link": {
+          "visible": false
+        }
+      },
+      "topics": {
+        "/camera/color/image_raw/compressed": {
+          "visible": true,
+          "cameraInfoTopic": "/camera/color/camera_info"
+        },
+        "/robot_description": {
+          "visible": true
+        },
+        "/scan": {
+          "visible": false,
+          "colorField": "range",
+          "colorMode": "colormap",
+          "colorMap": "turbo",
+          "pointSize": 8,
+          "explicitAlpha": 1
+        },
+        "/oak/rgb/image_raw": {
+          "visible": false,
+          "frameLocked": true,
+          "cameraInfoTopic": "/oak/rgb/camera_info",
+          "distance": 1,
+          "planarProjectionFactor": 0,
+          "color": "#ffffff"
+        },
+        "/oak/rgb/image_raw/compressed": {
+          "visible": true,
+          "cameraInfoTopic": "/oak/rgb/camera_info"
+        },
+        "/scan_filtered": {
+          "visible": true,
+          "colorField": "range",
+          "colorMode": "colormap",
+          "colorMap": "turbo",
+          "pointSize": 8
+        }
+      },
+      "layers": {},
+      "publish": {
+        "type": "point",
+        "poseTopic": "/move_base_simple/goal",
+        "pointTopic": "/clicked_point",
+        "poseEstimateTopic": "/initialpose",
+        "poseEstimateXDeviation": 0.5,
+        "poseEstimateYDeviation": 0.5,
+        "poseEstimateThetaDeviation": 0.26179939
+      },
+      "imageMode": {},
+      "followTf": "cover_link"
+    },
+    "Teleop!1tgx2ca": {
+      "publishRate": 10,
+      "upButton": {
+        "field": "linear-x",
+        "value": 0.2
+      },
+      "downButton": {
+        "field": "linear-x",
+        "value": -0.2
+      },
+      "leftButton": {
+        "field": "angular-z",
+        "value": 1
+      },
+      "rightButton": {
+        "field": "angular-z",
+        "value": -1
+      },
+      "topic": "/cmd_vel"
+    },
+    "RosOut!b0toow": {
+      "searchTerms": [],
+      "minLogLevel": 1
+    },
+    "Gauge!35smwvj": {
+      "path": "/battery_state.voltage",
+      "minValue": 8,
+      "maxValue": 13.5,
+      "colorMap": "turbo",
+      "colorMode": "colormap",
+      "gradient": [
+        "#0000ff",
+        "#ff00ff"
+      ],
+      "reverse": false
+    }
+  },
+  "globalVariables": {},
+  "userNodes": {},
+  "playbackConfig": {
+    "speed": 1
+  },
+  "layout": {
+    "direction": "row",
+    "first": {
+      "first": "3D!1hjkoi9",
+      "second": "Teleop!1tgx2ca",
+      "direction": "column",
+      "splitPercentage": 74.4611365120836
+    },
+    "second": {
+      "first": "RosOut!b0toow",
+      "second": "Gauge!35smwvj",
+      "direction": "column",
+      "splitPercentage": 44.73067915690867
+    },
+    "splitPercentage": 69.28135946324078
+  }
+}

@@ -1,3 +1,14 @@
+x-common-config:
+  &common-config
+  network_mode: host
+  ipc: host 
+  pid: host # ?
+  restart: unless-stopped
+
+x-dds-envs:
+  &dds-envs
+  env_file: .env.dds
+
 services:
 
   foxglove:
@@ -5,90 +16,84 @@ services:
     restart: unless-stopped
     ports:
       - 8080:8080
-      - 8765:8765
     volumes:
-      - ./params/RosbotTeleop.json:/foxglove/default-layout.json
-      # - ./params/RosbotTeleopFull.json:/foxglove/default-layout.json
+      - ./params/ROSbotXL.json:/foxglove/default-layout.json
+    depends_on:
+      rplidar: { condition: service_healthy }
+      rosbot: { condition: service_healthy }
     environment:
-      # - DS_TYPE=rosbridge-websocket
-      # - DS_PORT=9090
       - DS_TYPE=foxglove-websocket
       - DS_PORT=8765
-      - DS_HOST=foxglove-ds
       - UI_PORT=8080
       - DISABLE_CACHE=true
       - DISABLE_INTERACTION=false
 
-  # rosbridge-ds:
-  #   image: husarion/rosbridge-server:humble-1.3.1-20230831-stable
-  #   ports:
-  #     - 9090:9090
-  #   command: ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+  reverse-proxy:
+    image: caddy:2.6.2-alpine
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      rosbot: { condition: service_healthy }
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
 
   foxglove-ds:
-    # image: husarion/foxglove-bridge:humble-0.7.3-20240108
-    # image: husarion/foxglove-bridge:humble-0.7.4-20240220
-    image: husarion/foxglove-bridge:humble-0.7.4-20240307
-    restart: unless-stopped
-    command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 capabilities:=[clientPublish,connectionGraph,assets]
+    image: husarion/foxglove-bridge:humble-0.7.4-20240320
+    <<:
+      - *common-config
+      - *dds-envs
+    depends_on:
+      rosbot: { condition: service_healthy }
+    command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8766 address:=127.0.0.1 capabilities:=[clientPublish,connectionGraph,assets]
+
+  teleop_twist_joy:
+    image: husarion/teleop-twist-joy:humble-2.4.5-20240318
+    depends_on:
+      rosbot: { condition: service_healthy }
+    <<:
+      - *common-config
+      - *dds-envs
+    command: ros2 run teleop_twist_joy teleop_node --ros-args --params-file /teleop_twist_joy_f710_params.yaml
 
   rosbot:
     image: husarion/rosbot-xl:humble-0.10.0-20240216
-    restart: unless-stopped
-    # devices:
-    #   - /dev/ttyUSBDB # just for firmware flashing
-    #   - /dev/bus/usb/ # just for firmware flashing
-    ports:
-      - 192.168.77.2:8888:8888/udp
+    <<:
+      - *common-config
+      - *dds-envs
     command: >
       ros2 launch /husarion_utils/rosbot.launch.py
         mecanum:=${MECANUM:-True}
         include_camera_mount:=True
-        healthcheck:=False
+        healthcheck:=True
 
-  # deptahai_ros driver provides /oak/rgb/image_raw/compressed topic with reliable QoS.
-  # For telepresence application best_effort QoS is better, because retranmission of the image is not needed.
-  # foxglove-ds creates a subscriber with the "minimum quality" QoS, which is best_effort if another 
-  # publisher with best_effort QoS for /oak/rgb/image_raw/compressed topic is present. Let's do it with ros2router.
-  # read more:
-  # 1. https://github.com/foxglove/ros-foxglove-bridge/blob/main/ros2_foxglove_bridge/src/ros2_foxglove_bridge.cpp#L498
-  # 2. https://docs.ros.org/en/rolling/Concepts/Intermediate/About-Quality-of-Service-Settings.html#qos-compatibilities
-  # qos-forcer:
-  #   image: husarnet/ros2router:1.9.0
-  #   environment:
-  #     - PARTICIPANTS=lo,if-eth0 # eth0 -is the name of the network interface from a Docker network in the container
-  #     - |
-  #       FILTER=
-  #         builtin-topics:
-  #           - name: rt/oak/rgb/image_raw/compressed
-  #             type: sensor_msgs::msg::dds_::CompressedImage_
-  #         topics:
-  #           - name: rt/oak/rgb/image_raw*
-  #             qos:
-  #               reliability: false
-  #               durability: false
-  #               history-depth: 1
-    
   luxonis:
-    # image: husarion/depthai:humble-qos_overrides #humble-2.8.1-20240127
     image: husarion/depthai:humble-2.8.1-20240127
-    restart: unless-stopped
+    <<:
+      - *common-config
+      - *dds-envs
     volumes:
       - /dev/bus/usb:/dev/bus/usb
       - ./params/oak-1-low-bandwidth.yaml:/params.yaml
     device_cgroup_rules:
       - 'c 189:* rmw'
+    depends_on:
+      rosbot: { condition: service_healthy }
     command: >
       ros2 launch depthai_ros_driver camera.launch.py
         params_file:=/params.yaml
+        parent_frame:=camera_mount_link
 
   rplidar:
     image: husarion/rplidar:humble-1.0.1-20240216
-    restart: unless-stopped
+    <<:
+      - *common-config
+      - *dds-envs
     devices:
       - /dev/ttyRPLIDAR:/dev/ttyUSB0
+    depends_on:
+      rosbot: { condition: service_healthy }
     command: >
       ros2 launch /husarion_utils/rplidar.launch.py
         serial_baudrate:=${LIDAR_BAUDRATE:-256000}
         serial_port:=/dev/ttyUSB0
-        healthcheck:=False
+        healthcheck:=True

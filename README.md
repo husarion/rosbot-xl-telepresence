@@ -13,12 +13,9 @@ Manual control & transmitting a real-time video feed from the ROSbot XL to onlin
 
 ## 🛍️ Necessary Hardware
 
-For the execution of this project, the following components are required:
+For the execution of this project you need to have **[ROSbot XL](https://husarion.com/manuals/rosbot-xl/)** in the **Telepresence Package** or **Telepresence PRO** package.
 
-1. **[ROSbot XL](https://husarion.com/manuals/rosbot-xl/)** - with any SBC (RPi4, NUC or Jetson)
-2. **[Luxonis Camera](https://husarion.com/tutorials/ros-equipment/oak-1-lite/)** - OAK-1 or OAK-D models.
-
-These items are available for purchase as a complete kit at [our online store](https://store.husarion.com/collections/robots/products/rosbot-xl).
+It is available for purchase as a complete set at [our online store](https://store.husarion.com/collections/robots/products/rosbot-xl).
 
 ## Quick start
 
@@ -36,11 +33,15 @@ To see all available commands just run `just`:
 ```bash
 husarion@rosbotxl:~/rosbot-xl-telepresence$ just
 Available recipes:
-    connect-husarnet joincode hostname # connect to Husarnet VPN network
-    sync hostname="${ROBOT_HOSTNAME}" password="husarion" # Copy repo content to remote host with 'rsync' and watch for changes
-    flash-firmware # flash the proper firmware for STM32 microcontroller in ROSbot XL
-    start-rosbot   # start containers on a physical ROSbot XL
-    run-teleop     # run teleop_twist_keybaord (host)
+    connect-husarnet joincode hostname # [PC] connect to Husarnet VPN network
+    sync hostname="${ROBOT_HOSTNAME}" password="husarion" # [PC] Copy repo content to remote host with 'rsync' and watch for changes
+    flash-firmware             # [ROSbot] flash the proper firmware for STM32 microcontroller in ROSbot XL
+    start-rosbot               # [ROSbot] start containers on a physical ROSbot XL
+    run-teleop                 # [ROSbot] run teleop_twist_keybaord
+    run-foxglove runtime="cpu" # [PC] run Foxglove Desktop on your PC (optional)
+    remove-launcher            # [PC] remove Foxglove Desktop launcher from the dock (optional)
+    install-launcher           # [PC] install Foxglove Desktop launcher on the dock (optional)
+    config                     # source ROS 2 workspace
 ```
 
 ### 🌎 Step 1: Connecting ROSbot and Laptop over VPN
@@ -107,8 +108,28 @@ Open the **Google Chrome** browser on your laptop and navigate to:
 > [!IMPORTANT]
 > Due to efficiency and official manufacturer support, it is recommended to use `foxglove-websocket`. When using `rosbridge-websocket`, it is necessary to edit `Custom Layers` to visualize the robot mesh.
 
+## Native Foxglove UI (optional)
 
-## Useful tips
+Alternatively to run Foxglove in the web browser, you can run foxglove natively on your PC:
+
+```bash
+just run-foxglove
+# just run-foxglove nvidia
+# or just foxglove
+```
+
+You can also install the launcher and add it to the Docker (on Ubuntu only):
+
+```bash
+just install-launcher
+```
+
+(remove it with `just remove-launcher`).
+
+With a desktop Foxglove app, the web ui setup looks slightly differently: [read here](https://github.com/husarion/foxglove-desktop-docker/blob/main/demo/rosbot-xl/README.md) (start after `And setup Foxglove UI:...` fragment).
+
+
+## Useful tips and troubleshooting
 
 ### 1. Checking a datarate
 
@@ -121,4 +142,14 @@ husarion@rosbot:~$ ifstat -i hnet0
     6.83   2744.66
     1.67   2659.88
     1.02   2748.40
+```
+### 2. Insufficient permissions for Luxonis camera
+
+Based on this [Depthai troubleshooting guide](https://github.com/luxonis/depthai-docs-website/blob/master/source/pages/troubleshooting.rst#udev-rules-on-linux)
+
+If you see error from Luxonis camera like: `[depthai] [warning] Insufficient permissions to communicate with X_LINK_UNBOOTED device with name "1.3". Make sure udev rules are set`, run:
+
+```bash
+echo 'SUBSYSTEM=="usb", ATTRS{idVendor}=="03e7", MODE="0666"' | sudo tee /etc/udev/rules.d/80-movidius.rules
+sudo udevadm control --reload-rules && sudo udevadm trigger
 ```

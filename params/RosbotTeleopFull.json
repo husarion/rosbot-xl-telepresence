@@ -4,8 +4,9 @@
       "paths": [
         {
           "timestampMethod": "receiveTime",
-          "value": "/battery.voltage",
-          "enabled": true
+          "value": "/battery_state.voltage",
+          "enabled": true,
+          "showLine": true
         }
       ],
       "minYValue": 9,
@@ -18,39 +19,8 @@
       "isSynced": true,
       "xAxisVal": "timestamp",
       "sidebarDimension": 240,
-      "foxglovePanelTitle": "Voltage [V]"
-    },
-    "Plot!36gu72d": {
-      "paths": [
-        {
-          "timestampMethod": "receiveTime",
-          "value": "/range/fl.range",
-          "enabled": true
-        },
-        {
-          "timestampMethod": "receiveTime",
-          "value": "/range/rl.range",
-          "enabled": true
-        },
-        {
-          "timestampMethod": "receiveTime",
-          "value": "/range/fr.range",
-          "enabled": true
-        },
-        {
-          "timestampMethod": "receiveTime",
-          "value": "/range/rr.range",
-          "enabled": true
-        }
-      ],
-      "showXAxisLabels": true,
-      "showYAxisLabels": true,
-      "showLegend": false,
-      "legendDisplay": "floating",
-      "showPlotValuesInLegend": false,
-      "isSynced": true,
-      "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "foxglovePanelTitle": "Voltage [V]",
+      "followingViewWidth": 60
     },
     "Plot!3fmge1k": {
       "paths": [
@@ -77,12 +47,13 @@
       ],
       "showXAxisLabels": true,
       "showYAxisLabels": true,
-      "showLegend": false,
+      "showLegend": true,
       "legendDisplay": "floating",
       "showPlotValuesInLegend": false,
       "isSynced": true,
       "xAxisVal": "timestamp",
-      "sidebarDimension": 240
+      "sidebarDimension": 240,
+      "followingViewWidth": 60
     },
     "Publish!2vt86ud": {
       "buttonText": "Publish",
@@ -119,13 +90,13 @@
     "3D!1hjkoi9": {
       "cameraState": {
         "perspective": true,
-        "distance": 1.4619545302559587,
+        "distance": 1.6198942163498962,
         "phi": 79.0089306132632,
         "thetaOffset": 88.88640568804543,
         "targetOffset": [
-          0.7722908390843872,
-          0.0402201506065365,
-          2.2851146762355585e-17
+          0.6629383237502144,
+          -0.03717204031913667,
+          5.566716984138977e-17
         ],
         "target": [
           0,
@@ -209,6 +180,54 @@
         },
         "frame:rr_wheel_link": {
           "visible": false
+        },
+        "frame:oak": {
+          "visible": false
+        },
+        "frame:camera_mount_link": {
+          "visible": false
+        },
+        "frame:oak_imu_frame": {
+          "visible": false
+        },
+        "frame:oak_left_camera_frame": {
+          "visible": false
+        },
+        "frame:oak_left_camera_optical_frame": {
+          "visible": false
+        },
+        "frame:oak_model_origin": {
+          "visible": false
+        },
+        "frame:oak_rgb_camera_frame": {
+          "visible": false
+        },
+        "frame:oak_rgb_camera_optical_frame": {
+          "visible": false
+        },
+        "frame:oak_right_camera_frame": {
+          "visible": false
+        },
+        "frame:oak_right_camera_optical_frame": {
+          "visible": false
+        },
+        "frame:antenna_link": {
+          "visible": false
+        },
+        "frame:antenna_connector_link": {
+          "visible": false
+        },
+        "frame:camera_mount_mid_link": {
+          "visible": false
+        },
+        "frame:camera_mount_bot_link": {
+          "visible": false
+        },
+        "frame:camera_mount_top_link": {
+          "visible": false
+        },
+        "frame:slamtec_rplidar_s1_link": {
+          "visible": false
         }
       },
       "topics": {
@@ -220,12 +239,31 @@
           "visible": true
         },
         "/scan": {
-          "visible": true,
+          "visible": false,
           "colorField": "range",
           "colorMode": "colormap",
           "colorMap": "turbo",
           "pointSize": 8,
           "explicitAlpha": 1
+        },
+        "/oak/rgb/image_raw": {
+          "visible": false,
+          "frameLocked": true,
+          "cameraInfoTopic": "/oak/rgb/camera_info",
+          "distance": 1,
+          "planarProjectionFactor": 0,
+          "color": "#ffffff"
+        },
+        "/oak/rgb/image_raw/compressed": {
+          "visible": true,
+          "cameraInfoTopic": "/oak/rgb/camera_info"
+        },
+        "/scan_filtered": {
+          "visible": true,
+          "colorField": "range",
+          "colorMode": "colormap",
+          "colorMap": "turbo",
+          "pointSize": 8
         }
       },
       "layers": {},
@@ -266,7 +304,7 @@
       "minLogLevel": 1
     },
     "Gauge!35smwvj": {
-      "path": "/battery.voltage",
+      "path": "/battery_state.voltage",
       "minValue": 8,
       "maxValue": 12.5,
       "colorMap": "turbo",
@@ -353,10 +391,6 @@
           "layout": "Plot!3dzg3fj"
         },
         {
-          "title": "Ranges Plots",
-          "layout": "Plot!36gu72d"
-        },
-        {
           "title": "IMU Plots",
           "layout": "Plot!3fmge1k"
         },
@@ -430,6 +464,6 @@
       "direction": "column",
       "splitPercentage": 68.27586206896552
     },
-    "splitPercentage": 73.79526105980983
+    "splitPercentage": 69.28135946324078
   }
 }
