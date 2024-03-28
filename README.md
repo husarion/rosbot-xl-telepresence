@@ -108,7 +108,7 @@ Open the **Google Chrome** browser on your laptop and navigate to:
 > Due to efficiency and official manufacturer support, it is recommended to use `foxglove-websocket`. When using `rosbridge-websocket`, it is necessary to edit `Custom Layers` to visualize the robot mesh.
 
 
-## Useful tips
+## Useful tips and troubleshooting
 
 ### 1. Checking a datarate
 
@@ -121,4 +121,14 @@ husarion@rosbot:~$ ifstat -i hnet0
     6.83   2744.66
     1.67   2659.88
     1.02   2748.40
+```
+### 2. Insufficient permissions
+
+Based on this [Depthai troubleshooting guide](https://github.com/luxonis/depthai-docs-website/blob/master/source/pages/troubleshooting.rst#udev-rules-on-linux)
+
+If you see error from Luxonis camera like: `[depthai] [warning] Insufficient permissions to communicate with X_LINK_UNBOOTED device with name "1.3". Make sure udev rules are set`, run:
+
+```bash
+echo 'SUBSYSTEM=="usb", ATTRS{idVendor}=="03e7", MODE="0666"' | sudo tee /etc/udev/rules.d/80-movidius.rules
+sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
