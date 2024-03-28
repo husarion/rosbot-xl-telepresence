@@ -16,19 +16,14 @@ services:
     restart: unless-stopped
     ports:
       - 8080:8080
-      # - 8765:8766
     volumes:
-      # - ./params/RosbotTeleopFull.json:/foxglove/default-layout.json
       - ./params/ROSbotXL.json:/foxglove/default-layout.json
     depends_on:
-      # rplidar: { condition: service_healthy }
+      rplidar: { condition: service_healthy }
       rosbot: { condition: service_healthy }
     environment:
       - DS_TYPE=foxglove-websocket
-      # - DS_PORT=8765
-      # - DS_HOST=foxglove-ds
       - DS_PORT=8765
-      # - DS_HOST=localhost
       - UI_PORT=8080
       - DISABLE_CACHE=true
       - DISABLE_INTERACTION=false
@@ -49,11 +44,7 @@ services:
       - *dds-envs
     depends_on:
       rosbot: { condition: service_healthy }
-    # command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 capabilities:=[clientPublish,connectionGraph,assets]
-    # command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8766 address:=::1 capabilities:=[clientPublish,connectionGraph,assets]
     command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8766 address:=127.0.0.1 capabilities:=[clientPublish,connectionGraph,assets]
-    # command: ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765 capabilities:=[clientPublish,connectionGraph,assets]
-    # command: tail -f /dev/null
 
   teleop_twist_joy:
     image: husarion/teleop-twist-joy:humble-2.4.5-20240318
@@ -69,17 +60,12 @@ services:
     <<:
       - *common-config
       - *dds-envs
-    # command: >
-    #   ros2 launch /husarion_utils/rosbot.launch.py
-    #     mecanum:=${MECANUM:-True}
-    #     healthcheck:=True
     command: >
       ros2 launch /husarion_utils/rosbot.launch.py
         mecanum:=${MECANUM:-True}
         include_camera_mount:=True
         healthcheck:=True
 
- 
   luxonis:
     image: husarion/depthai:humble-2.8.1-20240127
     <<:
@@ -97,17 +83,17 @@ services:
         params_file:=/params.yaml
         parent_frame:=camera_mount_link
 
-  # rplidar:
-  #   image: husarion/rplidar:humble-1.0.1-20240216
-  #   <<:
-  #     - *common-config
-  #     - *dds-envs
-  #   devices:
-  #     - /dev/ttyRPLIDAR:/dev/ttyUSB0
-  #   depends_on:
-  #     rosbot: { condition: service_healthy }
-  #   command: >
-  #     ros2 launch /husarion_utils/rplidar.launch.py
-  #       serial_baudrate:=${LIDAR_BAUDRATE:-256000}
-  #       serial_port:=/dev/ttyUSB0
-  #       healthcheck:=True
+  rplidar:
+    image: husarion/rplidar:humble-1.0.1-20240216
+    <<:
+      - *common-config
+      - *dds-envs
+    devices:
+      - /dev/ttyRPLIDAR:/dev/ttyUSB0
+    depends_on:
+      rosbot: { condition: service_healthy }
+    command: >
+      ros2 launch /husarion_utils/rplidar.launch.py
+        serial_baudrate:=${LIDAR_BAUDRATE:-256000}
+        serial_port:=/dev/ttyUSB0
+        healthcheck:=True

@@ -13,12 +13,9 @@ Manual control & transmitting a real-time video feed from the ROSbot XL to onlin
 
 ## 🛍️ Necessary Hardware
 
-For the execution of this project, the following components are required:
+For the execution of this project you need to have **[ROSbot XL](https://husarion.com/manuals/rosbot-xl/)** in the **Telepresence Package** or **Telepresence PRO** package.
 
-1. **[ROSbot XL](https://husarion.com/manuals/rosbot-xl/)** - with any SBC (RPi4, NUC or Jetson)
-2. **[Luxonis Camera](https://husarion.com/tutorials/ros-equipment/oak-1-lite/)** - OAK-1 or OAK-D models.
-
-These items are available for purchase as a complete kit at [our online store](https://store.husarion.com/collections/robots/products/rosbot-xl).
+It is available for purchase as a complete set at [our online store](https://store.husarion.com/collections/robots/products/rosbot-xl).
 
 ## Quick start
 
@@ -106,6 +103,26 @@ Open the **Google Chrome** browser on your laptop and navigate to:
 
 > [!IMPORTANT]
 > Due to efficiency and official manufacturer support, it is recommended to use `foxglove-websocket`. When using `rosbridge-websocket`, it is necessary to edit `Custom Layers` to visualize the robot mesh.
+
+## Native Foxglove UI (optional)
+
+Alternatively to run Foxglove in the web browser, you can run foxglove natively on your PC:
+
+```bash
+just run-foxglove
+# just run-foxglove nvidia
+# or just foxglove
+```
+
+You can also install the launcher and add it to the Docker (on Ubuntu only):
+
+```bash
+just install-launcher
+```
+
+(remove it with `just remove-launcher`).
+
+With a desktop Foxglove app, the web ui setup looks slightly differently: [read here](https://github.com/husarion/foxglove-desktop-docker/blob/main/demo/rosbot-xl/README.md) (start after `And setup Foxglove UI:...` fragment).
 
 
 ## Useful tips and troubleshooting
