@@ -12,6 +12,8 @@ alias flash := flash-firmware
 alias rosbot := start-rosbot
 [private]
 alias teleop := run-teleop
+[private]
+alias foxglove := run-foxglove
 
 [private]
 pre-commit:
@@ -22,7 +24,7 @@ pre-commit:
     fi
     pre-commit run -a
 
-# connect to Husarnet VPN network
+# [PC] connect to Husarnet VPN network
 connect-husarnet joincode hostname: _run-as-root
     #!/bin/bash
     if ! command -v husarnet > /dev/null; then
@@ -31,16 +33,15 @@ connect-husarnet joincode hostname: _run-as-root
     fi
     husarnet join {{joincode}} {{hostname}}
 
-# Copy repo content to remote host with 'rsync' and watch for changes
+# [PC] Copy repo content to remote host with 'rsync' and watch for changes
 sync hostname="${ROBOT_HOSTNAME}" password="husarion": _install-rsync _run-as-user
     #!/bin/bash
-    mkdir -m 775 -p maps
-    sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --exclude='maps/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
-    while inotifywait -r -e modify,create,delete,move ./ --exclude='.git/' --exclude='maps/' ; do
-        sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --exclude='maps/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
+    sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
+    while inotifywait -r -e modify,create,delete,move ./ --exclude='.git/' ; do
+        sshpass -p "{{password}}" rsync -vRr --exclude='.git/' --delete ./ husarion@{{hostname}}:/home/husarion/${PWD##*/}
     done
 
-# flash the proper firmware for STM32 microcontroller in ROSbot XL
+# [ROSbot] flash the proper firmware for STM32 microcontroller in ROSbot XL
 flash-firmware: _install-yq _run-as-user
     #!/bin/bash
     echo "Stopping all running containers"
@@ -55,18 +56,91 @@ flash-firmware: _install-yq _run-as-user
         ros2 run rosbot_xl_utils flash_firmware --port /dev/ttyUSBDB
         # flash-firmware.py -p /dev/ttyUSBDB # todo
 
-# start containers on a physical ROSbot XL
+# [ROSbot] start containers on a physical ROSbot XL
 start-rosbot: _run-as-user
     #!/bin/bash
-    mkdir -m 775 -p maps
     docker compose down
     docker compose pull
     docker compose up
 
-# run teleop_twist_keybaord (host)
+# [ROSbot] run teleop_twist_keybaord
 run-teleop: _run-as-user
     #!/bin/bash
+    source .env.local
     ros2 run teleop_twist_keyboard teleop_twist_keyboard # --ros-args -r __ns:=/${ROBOT_NAMESPACE}
+
+# [PC] run Foxglove Desktop on your PC (optional)
+run-foxglove runtime="cpu": _run-as-user
+    #!/bin/bash
+    if  [[ "{{runtime}}" == "nvidia" ]] ; then
+        echo "Docker runtime: nvidia"
+        export DOCKER_RUNTIME=nvidia
+        export LIBGL_ALWAYS_SOFTWARE=0
+    else
+        echo "Docker runtime: runc"
+        export DOCKER_RUNTIME=runc
+        export LIBGL_ALWAYS_SOFTWARE=1
+    fi
+
+    xhost +local:docker
+    docker compose -f compose.pc.yaml pull
+    docker compose -f compose.pc.yaml up foxglove
+
+# [PC] remove Foxglove Desktop launcher from the dock (optional)
+remove-launcher:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    sudo rm -rf "$HOME/.local/share/applications/rosbot_xl_telepresence.desktop"
+    update-desktop-database "$HOME/.local/share/applications/"
+    echo "Application launcher for ROSbot XL telepresence UI removed."
+    # Remove application launcher from the Ubuntu dock
+    # Extract the current list of favorites
+    FAVORITES=$(gsettings get org.gnome.shell favorite-apps)
+
+    # Modify the favorites list to remove the launcher, if present
+    NEW_FAVORITES=$(echo $FAVORITES | sed "s/'rosbot_xl_telepresence.desktop',//g" | sed "s/, 'rosbot_xl_telepresence.desktop'//g" | sed "s/'rosbot_xl_telepresence.desktop'//g")
+
+    # Update the list of favorites
+    gsettings set org.gnome.shell favorite-apps "$NEW_FAVORITES"
+
+    echo "Application launcher for Foxglove ROSbot XL removed from the dock."
+
+# [PC] install Foxglove Desktop launcher on the dock (optional)
+install-launcher:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    LAUNCHER_PATH="$HOME/.local/share/applications/rosbot_xl_telepresence.desktop"
+    CURRENT_DIR=$(pwd)
+    ICON_PATH="${CURRENT_DIR}/husarion-signet.png"
+
+    echo "[Desktop Entry]
+    Version=1.0
+    Type=Application
+    Name=ROSbot XL telepresence UI
+    Exec=gnome-terminal -- bash -c 'just foxglove runc'
+    Icon=${ICON_PATH}
+    Path=${CURRENT_DIR}
+    Terminal=false
+    StartupNotify=false" > "${LAUNCHER_PATH}"
+
+    sudo chmod +x "${LAUNCHER_PATH}"
+    update-desktop-database "$HOME/.local/share/applications/"
+    echo "Application launcher for ROSbot XL telepresence UI installed."
+
+    # Add application launcher to the Ubuntu dock if not already present
+    FAVORITES=$(gsettings get org.gnome.shell favorite-apps)
+    LAUNCHER_ID="'rosbot_xl_telepresence.desktop'"
+
+    # Check if the launcher is already in the list of favorites
+    if [[ $FAVORITES != *"$LAUNCHER_ID"* ]]; then
+        # If not, add it to the list
+        NEW_FAVORITES=$(echo $FAVORITES | sed -e "s/]$/, $LAUNCHER_ID]/")
+        gsettings set org.gnome.shell favorite-apps "$NEW_FAVORITES"
+        echo "Application launcher for ROSbot XL telepresence UI added to the dock."
+    else
+        echo "Application launcher for ROSbot XL telepresence UI is already in the dock."
+    fi
 
 _run-as-root:
     #!/bin/bash
