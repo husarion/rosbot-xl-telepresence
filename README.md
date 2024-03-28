@@ -13,7 +13,7 @@ Manual control & transmitting a real-time video feed from the ROSbot XL to onlin
 
 ## 🛍️ Necessary Hardware
 
-For the execution of this project you need to have **[ROSbot XL](https://husarion.com/manuals/rosbot-xl/)** in the **Telepresence Package** or **Telepresence PRO** package.
+For the execution of this project you need to have **[ROSbot XL](https://husarion.com/manuals/rosbot-xl/)** in the **Telepresence Package** or **Telepresence PRO Package**.
 
 It is available for purchase as a complete set at [our online store](https://store.husarion.com/collections/robots/products/rosbot-xl).
 
